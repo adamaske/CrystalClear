@@ -1,0 +1,2 @@
+C:\Users\adama\Documents\GitHub\CrystalClear\CrystalClear\Intermediate\Build\Win64\UE4Editor\Development\CrystalClear\Definitions.CrystalClear.h
+C:\Users\adama\Documents\GitHub\CrystalClear\CrystalClear\Source\CrystalClear\CrystalClear.h

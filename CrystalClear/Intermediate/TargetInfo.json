@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "CrystalClear",
+			"Path": "C:\\Users\\adama\\Documents\\GitHub\\CrystalClear\\CrystalClear\\Source\\CrystalClear.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "CrystalClearEditor",
+			"Path": "C:\\Users\\adama\\Documents\\GitHub\\CrystalClear\\CrystalClear\\Source\\CrystalClearEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}

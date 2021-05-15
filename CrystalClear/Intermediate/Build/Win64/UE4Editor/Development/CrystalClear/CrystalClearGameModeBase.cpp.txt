@@ -1,0 +1,7 @@
+C:\Users\adama\Documents\GitHub\CrystalClear\CrystalClear\Intermediate\Build\Win64\UE4Editor\Development\CrystalClear\Definitions.CrystalClear.h
+C:\Users\adama\Documents\GitHub\CrystalClear\CrystalClear\Source\CrystalClear\CrystalClearGameModeBase.h
+C:\Program Files\Epic Games\UE_4.26\Engine\Source\Runtime\Engine\Classes\GameFramework/GameModeBase.h
+C:\Program Files\Epic Games\UE_4.26\Engine\Source\Runtime\Engine\Classes\Engine/ServerStatReplicator.h
+C:\Program Files\Epic Games\UE_4.26\Engine\Intermediate\Build\Win64\UE4Editor\Inc\Engine\ServerStatReplicator.generated.h
+C:\Program Files\Epic Games\UE_4.26\Engine\Intermediate\Build\Win64\UE4Editor\Inc\Engine\GameModeBase.generated.h
+C:\Users\adama\Documents\GitHub\CrystalClear\CrystalClear\Intermediate\Build\Win64\UE4Editor\Inc\CrystalClear\CrystalClearGameModeBase.generated.h
