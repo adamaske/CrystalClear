@@ -7,6 +7,11 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "PlayerUnit.generated.h"
+USTRUCT()
+struct FPlayerSave {
+	GENERATED_BODY()
+	double x, y, z;
+};
 
 UCLASS()
 class CRYSTALCLEAR_API APlayerUnit : public ACharacter
@@ -49,4 +54,8 @@ public:
 		void Interact();
 	UPROPERTY(EditAnywhere)
 		float InteractionDistance = 200;
+	class UInteractableComponent* interactable;
+
+	UFUNCTION()
+		FPlayerSave GetPlayerSave();
 };

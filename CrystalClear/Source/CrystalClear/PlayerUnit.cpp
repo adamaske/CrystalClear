@@ -97,7 +97,7 @@ void APlayerUnit::Interact() {
 	TraceParams.AddIgnoredActor(this);
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility)) {
 		if (HitResult.GetActor()->GetComponentByClass(UInteractableComponent::StaticClass())) {
-			UInteractableComponent* interactable = Cast<UInteractableComponent>(HitResult.GetActor()->GetComponentByClass(UInteractableComponent::StaticClass()));
+			interactable = Cast<UInteractableComponent>(HitResult.GetActor()->GetComponentByClass(UInteractableComponent::StaticClass()));
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Hit InteractableComponent"));
 			interactable->Interact(this);
 		}
@@ -107,4 +107,12 @@ void APlayerUnit::Interact() {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Didnt hit actor"));
 	};
 	
+}
+
+FPlayerSave APlayerUnit::GetPlayerSave() {
+	FPlayerSave save;
+	save.x = GetActorLocation().X;
+	save.y = GetActorLocation().Y;
+	save.z = GetActorLocation().Z;
+	return save;
 }
