@@ -2,7 +2,7 @@
 
 
 #include "PlayerUnit.h"
-
+#include "InteractableComponent.h"
 // Sets default values
 APlayerUnit::APlayerUnit()
 {
@@ -54,6 +54,8 @@ void APlayerUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// Set up "action" bindings.
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerUnit::StartJump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &APlayerUnit::StopJump);
+	// Set up "interact" bindings.
+	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerUnit::Interact);
 }
 
 void APlayerUnit::MoveForward(float Value)
@@ -78,4 +80,31 @@ void APlayerUnit::StartJump()
 void APlayerUnit::StopJump()
 {
 	bPressedJump = false;
+}
+
+void APlayerUnit::Interact() {
+	// get the camera transform
+	FVector CameraLoc;
+	FRotator CameraRot;
+	GetActorEyesViewPoint(CameraLoc, CameraRot);
+
+	FVector Start = CameraLoc;
+	// you need to add a uproperty to the header file for a float PlayerInteractionDistance
+	FVector End = CameraLoc + (CameraRot.Vector() * InteractionDistance);
+	
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParams;
+	TraceParams.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility)) {
+		if (HitResult.GetActor()->GetComponentByClass(UInteractableComponent::StaticClass())) {
+			UInteractableComponent* interactable = Cast<UInteractableComponent>(HitResult.GetActor()->GetComponentByClass(UInteractableComponent::StaticClass()));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Hit InteractableComponent"));
+			interactable->Interact(this);
+		}
+		
+	}
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Didnt hit actor"));
+	};
+	
 }

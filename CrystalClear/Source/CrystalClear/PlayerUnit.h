@@ -45,6 +45,8 @@ public:
 	// FPS camera.
 	UPROPERTY(VisibleAnywhere)
 		UCameraComponent* FPSCameraComponent;
-
-	APlayerController* PC{ nullptr };
+	UFUNCTION()
+		void Interact();
+	UPROPERTY(EditAnywhere)
+		float InteractionDistance = 200;
 };
