@@ -31,7 +31,7 @@ void APlayerUnit::BeginPlay()
 
 		// Display a debug message for five seconds. 
 	   // The -1 "Key" value (first argument) indicates that we will never need to update or refresh this message.
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("We are using FPSCharacter."));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Using PlayerUnit"));
 }
 
 // Called every frame

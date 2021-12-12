@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CRYSTALCLEAR_API UDialogueComponent : public UInteractableComponent
 {
 	GENERATED_BODY()
