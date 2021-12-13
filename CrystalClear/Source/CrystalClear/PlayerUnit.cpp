@@ -3,6 +3,9 @@
 
 #include "PlayerUnit.h"
 #include "InteractableComponent.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "MoveableHandler.h"
+#include "MoveableComponent.h"
 // Sets default values
 APlayerUnit::APlayerUnit()
 {
@@ -10,23 +13,30 @@ APlayerUnit::APlayerUnit()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Create a first person camera component.
-	FPSCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	check(FPSCameraComponent != nullptr);
+	FPSCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	check(FPSCamera != nullptr);
 
 	// Attach the camera component to our capsule component.
-	FPSCameraComponent->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
+	FPSCamera->SetupAttachment(CastChecked<USceneComponent, UCapsuleComponent>(GetCapsuleComponent()));
 
 	// Position the camera slightly above the eyes.
-	FPSCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f + BaseEyeHeight));
+	FPSCamera->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f + BaseEyeHeight));
 
 	// Enable the pawn to control camera rotation.
-	FPSCameraComponent->bUsePawnControlRotation = true;
+	FPSCamera->bUsePawnControlRotation = true;
+
+	GrabLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Grab Location"));
+	GrabLocation->SetupAttachment(FPSCamera);
+
+	moveableHandler = CreateDefaultSubobject<UMoveableHandler>(TEXT("Moveable Handler"));
+	moveableHandler->player = this;
 }
 
 // Called when the game starts or when spawned
 void APlayerUnit::BeginPlay()
 {
 	Super::BeginPlay();
+	moveableHandler->player = this;
 	check(GEngine != nullptr)
 
 		// Display a debug message for five seconds. 
@@ -38,7 +48,8 @@ void APlayerUnit::BeginPlay()
 void APlayerUnit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
+	//UE_LOG(LogTemp, Warning, TEXT("GrabLocation %s"), *(GrabLocation->GetComponentLocation()).ToString());
 }
 
 // Called to bind functionality to input
@@ -56,6 +67,9 @@ void APlayerUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &APlayerUnit::StopJump);
 	// Set up "interact" bindings.
 	PlayerInputComponent->BindAction("Interact", IE_Pressed, this, &APlayerUnit::Interact);
+	// Set up "moving" bindings.
+	PlayerInputComponent->BindAction("Carry item", IE_Pressed, this, &APlayerUnit::StartMovingItem);
+	PlayerInputComponent->BindAction("Carry item", IE_Released, this, &APlayerUnit::EndMovingItem);
 }
 
 void APlayerUnit::MoveForward(float Value)
@@ -84,9 +98,9 @@ void APlayerUnit::StopJump()
 
 void APlayerUnit::Interact() {
 	// get the camera transform
-	FVector CameraLoc;
-	FRotator CameraRot;
-	GetActorEyesViewPoint(CameraLoc, CameraRot);
+	FVector CameraLoc = FPSCamera->GetComponentLocation();
+	FRotator CameraRot = FPSCamera->GetComponentRotation();
+	//GetActorEyesViewPoint(CameraLoc, CameraRot);
 
 	FVector Start = CameraLoc;
 	// you need to add a uproperty to the header file for a float PlayerInteractionDistance
@@ -107,6 +121,34 @@ void APlayerUnit::Interact() {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Didnt hit actor"));
 	};
 	
+}
+
+void APlayerUnit::StartMovingItem()
+{
+	// get the camera transform
+	FVector CameraLoc;
+	FRotator CameraRot;
+	GetActorEyesViewPoint(CameraLoc, CameraRot);
+
+	FVector Start = CameraLoc;
+	// you need to add a uproperty to the header file for a float PlayerInteractionDistance
+	FVector End = CameraLoc + (CameraRot.Vector() * MoveableDistance);
+
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParams;
+	TraceParams.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility)) {
+		if (HitResult.GetActor()->GetComponentByClass(UMoveableComponent::StaticClass())) {
+
+			moveableHandler->StartMoving(Cast<UMoveableComponent>(HitResult.GetActor()->GetComponentByClass(UMoveableComponent::StaticClass())),
+				GrabLocation->GetComponentLocation() - HitResult.GetActor()->GetActorLocation());
+		}
+	}
+}
+
+void APlayerUnit::EndMovingItem()
+{
+	moveableHandler->EndMoving();
 }
 
 FPlayerSave APlayerUnit::GetPlayerSave() {
