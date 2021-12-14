@@ -5,7 +5,9 @@
 #include "InteractableComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "MoveableHandler.h"
+#include "InventoryComponent.h"
 #include "MoveableComponent.h"
+#include "PlayerHandComponent.h"
 // Sets default values
 APlayerUnit::APlayerUnit()
 {
@@ -30,6 +32,11 @@ APlayerUnit::APlayerUnit()
 
 	moveableHandler = CreateDefaultSubobject<UMoveableHandler>(TEXT("Moveable Handler"));
 	moveableHandler->player = this;
+
+	inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+
+	handComponent = CreateDefaultSubobject<UPlayerHandComponent>(TEXT("Player Hand"));
+	handComponent->hand->SetupAttachment(FPSCamera);
 }
 
 // Called when the game starts or when spawned
@@ -37,6 +44,8 @@ void APlayerUnit::BeginPlay()
 {
 	Super::BeginPlay();
 	moveableHandler->player = this;
+	inventory->player = this;
+	handComponent->player = this;
 	check(GEngine != nullptr)
 
 		// Display a debug message for five seconds. 
@@ -70,6 +79,9 @@ void APlayerUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// Set up "moving" bindings.
 	PlayerInputComponent->BindAction("Carry item", IE_Pressed, this, &APlayerUnit::StartMovingItem);
 	PlayerInputComponent->BindAction("Carry item", IE_Released, this, &APlayerUnit::EndMovingItem);
+
+	// Set up "look" bindings.
+	PlayerInputComponent->BindAxis("MouseScroll", this, &APlayerUnit::NextItem);
 }
 
 void APlayerUnit::MoveForward(float Value)
@@ -149,6 +161,16 @@ void APlayerUnit::StartMovingItem()
 void APlayerUnit::EndMovingItem()
 {
 	moveableHandler->EndMoving();
+}
+
+void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
+{
+	inventory->AddItem(item, activate);
+}
+
+void APlayerUnit::NextItem(float dir)
+{
+	inventory->ActivateNextItem(dir);
 }
 
 FPlayerSave APlayerUnit::GetPlayerSave() {

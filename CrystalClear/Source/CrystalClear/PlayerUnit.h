@@ -56,6 +56,17 @@ public:
 		float MoveableDistance = 200;
 	UPROPERTY(EditAnywhere)
 		class USceneComponent* GrabLocation;
+
+	//Inventory
+	UPROPERTY(VisibleAnywhere)
+	class UInventoryComponent* inventory;
+	void PickupItem(class AInventoryItem* item, bool activate);
+
+	//Hand
+	UPROPERTY(EditAnywhere)
+	 class UPlayerHandComponent* handComponent;
+
+	void NextItem(float dir);
 private:
 	UFUNCTION()
 		FPlayerSave GetPlayerSave();
@@ -69,4 +80,6 @@ private:
 	void EndMovingItem();
 	class UMoveableHandler* moveableHandler;
 
+	//
+	
 };
