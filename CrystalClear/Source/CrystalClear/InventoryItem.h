@@ -37,10 +37,14 @@ public:
 	FInventoryItemInfo ItemInfo;
 	UPROPERTY(EditAnywhere)
 	int ItemID = 0;
-
+	class UPrimitiveComponent* root;
 	void DisableItem();
 	void ActivateItem();
-
+	void DisablePhysics();
+	void EnablePhysics();
+	//U
+	UPROPERTY(EditAnywhere)
+		class UStaticMeshComponent* mesh;
 	//
 	UPROPERTY(EditAnywhere)
 		class UInventoryPickupComponent* pickupComponent;

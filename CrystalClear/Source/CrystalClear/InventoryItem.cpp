@@ -10,13 +10,15 @@ AInventoryItem::AInventoryItem()
 	PrimaryActorTick.bCanEverTick = true;
 
 	pickupComponent = CreateDefaultSubobject<UInventoryPickupComponent>(TEXT("PickupComponent"));
+
+	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+
 }
 
 // Called when the game starts or when spawned
 void AInventoryItem::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -46,12 +48,25 @@ void AInventoryItem::DisableItem()
 	SetActorEnableCollision(false);
 }
 
+void AInventoryItem::DisablePhysics()
+{
+	mesh->SetSimulatePhysics(false);
+	mesh->SetEnableGravity(false);
+	SetActorEnableCollision(false);
+}
+
+void AInventoryItem::EnablePhysics()
+{
+	mesh->SetSimulatePhysics(true);
+	mesh->SetEnableGravity(true);
+	SetActorEnableCollision(true);
+}
+
 void AInventoryItem::ActivateItem()
 {
 	SetActorHiddenInGame(false);
 	SetActorTickEnabled(true);
 	SetActorEnableCollision(true);
-
 }
 
 void AInventoryItem::Use1()

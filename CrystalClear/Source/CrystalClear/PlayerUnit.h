@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "PlayerUnit.generated.h"
+
 USTRUCT()
 struct FPlayerSave {
 	GENERATED_BODY()
@@ -32,22 +33,12 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	// Handles input for moving forward and backward.
-	UFUNCTION()
-		void MoveForward(float Value);
-	// Handles input for moving right and left.
-	UFUNCTION()
-		void MoveRight(float Value);
-	// Sets jump flag when key is pressed.
-	UFUNCTION()
-		void StartJump();
-	// Clears jump flag when key is released.
-	UFUNCTION()
-		void StopJump();
+	
 	// FPS camera.
 	UPROPERTY(VisibleAnywhere)
 		UCameraComponent* FPSCamera;
-	
+
+
 	UPROPERTY(EditAnywhere)
 		float InteractionDistance = 200;
 
@@ -57,21 +48,9 @@ public:
 	UPROPERTY(EditAnywhere)
 		class USceneComponent* GrabLocation;
 
-	//Inventory
-	UPROPERTY(VisibleAnywhere)
-	class UInventoryComponent* inventory;
-	void PickupItem(class AInventoryItem* item, bool activate);
-	void DropItem();
-	//Hand
-	UPROPERTY(EditAnywhere)
-	class USceneComponent* hand;
-	//Enable hands
-	void PutAwayItem();
-	void NextItem(float dir);
+	
 
-	bool bUsesHands = false;
-	void EnableHands();
-	void DisableHands();
+	
 private:
 	UFUNCTION()
 		FPlayerSave GetPlayerSave();
@@ -88,6 +67,46 @@ private:
 	//Using Items
 	void UseLeftClick();
 	void UseRightClick();
+	void DropItem();
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* handsMesh;
+	FVector Direction;
+
+#pragma region Move functions
+// Handles input for moving forward and backward.
+	UFUNCTION()
+		void MoveForward(float Value);
+	// Handles input for moving right and left.
+	UFUNCTION()
+		void MoveRight(float Value);
+	// Sets jump flag when key is pressed.
+	UFUNCTION()
+		void StartJump();
+	// Clears jump flag when key is released.
+	UFUNCTION()
+		void StopJump();
+#pragma endregion
+
+#pragma region Inventory & Items
+public:
+	UPROPERTY(VisibleAnywhere)
+		class UInventoryComponent* inventory;
+	void PickupItem(class AInventoryItem* item, bool activate);
+	//Hand, where items are held
+	UPROPERTY(EditAnywhere)
+		class USceneComponent* hand;
+	//Put away items/Enable hands
+	void PutAwayItem();
+
+	//Cycle trough items
+	void NextItem(float dir);
+	
+	//Enable hands, switches modes for player and inventory
+	bool bUsesHands = false;
+	void EnableHands();
+	void DisableHands();
+
+private:
+
+#pragma endregion
 };

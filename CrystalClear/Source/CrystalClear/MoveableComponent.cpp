@@ -5,6 +5,10 @@
 
 void UMoveableComponent::BeginPlay() {
 
+	if (GetOwner()->GetRootComponent()->IsA(UPrimitiveComponent::StaticClass())){
+		root = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+	}
+	root = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
 }
 void UMoveableComponent::Interact(APlayerUnit* player) {
 
@@ -13,8 +17,10 @@ void UMoveableComponent::Interact(APlayerUnit* player) {
 void UMoveableComponent::StartBeingMoved(APlayerUnit* player) {
 	//Set the shiz
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Started being moved"));
+	if (!root) {
+		return;
+	}
 	
-	root->SetSimulatePhysics(true);
 	if (bDisableGravityWhileGrabbed) {
 		root->SetEnableGravity(false);
 	}
@@ -24,6 +30,9 @@ void UMoveableComponent::StartBeingMoved(APlayerUnit* player) {
 }
 void UMoveableComponent::EndBeingMoved() {
 	//Set the shiz
+	if (!root) {
+		return;
+	}
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Ended being moved"));
 	if (bDisablePhysicsWhenNotCarried) {
 		root->SetSimulatePhysics(false);

@@ -51,7 +51,7 @@ public:
 	//Returns the active item
 	AInventoryItem* ActiveItem();
 
-
+	void DropItem();
 private:
 	void InitInventory(FInventorySave save);
 

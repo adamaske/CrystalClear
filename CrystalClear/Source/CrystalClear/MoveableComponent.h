@@ -20,6 +20,7 @@ public:
 
 	void StartBeingMoved(APlayerUnit* player);
 	void EndBeingMoved();
+	class UPrimitiveComponent* root;
 	UPROPERTY(EditAnywhere)
 		bool bDisablePhysicsWhenNotCarried = true;
 	UPROPERTY(EditAnywhere)

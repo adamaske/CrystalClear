@@ -81,28 +81,26 @@ void APlayerUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// Set up "moving" bindings.
 	PlayerInputComponent->BindAction("Carry item", IE_Pressed, this, &APlayerUnit::StartMovingItem);
 	PlayerInputComponent->BindAction("Carry item", IE_Released, this, &APlayerUnit::EndMovingItem);
-	// Set up "moving" bindings.
-	PlayerInputComponent->BindAction("Use 1", IE_Pressed, this, &APlayerUnit::UseLeftClick);
-	PlayerInputComponent->BindAction("Use 2", IE_Released, this, &APlayerUnit::UseRightClick);
 	// Set up "MouseScroll" bindings.
 	PlayerInputComponent->BindAxis("MouseScroll", this, &APlayerUnit::NextItem);
-	// Set up "using items" bindings.
+	// Set up "items" bindings.
 	PlayerInputComponent->BindAction("Put Away Item", IE_Pressed, this, &APlayerUnit::PutAwayItem);
-	PlayerInputComponent->BindAction("Use Left", IE_Pressed, this, &APlayerUnit::UseLeftClick);
-	PlayerInputComponent->BindAction("Use Right", IE_Pressed, this, &APlayerUnit::UseRightClick);
+	PlayerInputComponent->BindAction("Use 1", IE_Pressed, this, &APlayerUnit::UseLeftClick);
+	PlayerInputComponent->BindAction("Use 2", IE_Released, this, &APlayerUnit::UseRightClick);
+	PlayerInputComponent->BindAction("Drop Item", IE_Pressed, this, &APlayerUnit::DropItem);
 }
 
 void APlayerUnit::MoveForward(float Value)
 {
 	// Find out which way is "forward" and record that the player wants to move that way.
-	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
+	Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
 	AddMovementInput(Direction, Value);
 }
 
 void APlayerUnit::MoveRight(float Value)
 {
 	// Find out which way is "right" and record that the player wants to move that way.
-	FVector Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+	Direction = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
 	AddMovementInput(Direction, Value);
 }
 
@@ -188,17 +186,14 @@ void APlayerUnit::UseRightClick()
 		inventory->ActiveItem()->Use2();
 	}
 }
+void APlayerUnit::DropItem()
+{
+	inventory->DropItem();
+}
 
 void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
 {
 	inventory->AddItem(item, activate);
-}
-
-void APlayerUnit::DropItem()
-{
-	if (bUsesHands) {
-		return;
-	}
 }
 
 void APlayerUnit::PutAwayItem()

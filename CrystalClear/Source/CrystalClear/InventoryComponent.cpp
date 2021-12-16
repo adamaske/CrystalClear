@@ -31,6 +31,7 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %d"), ActiveItemIndex));
 	if (playerItems[ActiveItemIndex]) {
 		playerItems[ActiveItemIndex]->SetActorLocation(player->hand->GetComponentLocation());
 		playerItems[ActiveItemIndex]->SetActorRotation(player->hand->GetComponentRotation());
@@ -98,6 +99,23 @@ AInventoryItem* UInventoryComponent::ActiveItem()
 	return playerItems[ActiveItemIndex];
 }
 
+void UInventoryComponent::DropItem()
+{
+
+	if (playerItems[ActiveItemIndex]) {
+		AInventoryItem* item = playerItems[ActiveItemIndex];
+		if (item) {
+			playerItems.Remove(item);
+			item->ActivateItem();
+			item->EnablePhysics();
+			item->SetActorRotation(player->GetActorRotation());
+			item->SetActorLocation(player->GetActorLocation() + FVector(200, 0 ,0));
+			CanSetNextItem();
+			player->EnableHands();
+		}
+	}
+}
+
 void UInventoryComponent::InitInventory(FInventorySave file)
 {
 	//Create all the items
@@ -146,12 +164,22 @@ bool UInventoryComponent::CanSetNextItem()
 			return true;
 		}
 	}
+	//Go through the whole
+	for (int i = 0; i < playerItems.Num(); i++) {
+		if (playerItems[i]) {
+			ActiveItemIndex = i;
+			return true;
+		}
+	}
+	//If it didnt find anything, set it to 0
+	ActiveItemIndex = 0;
 	return false;
 }
 
 void UInventoryComponent::AddItem(AInventoryItem* item, bool setAsActiveItem)
 {
 	playerItems.Add(item);
+	
 	
 	if (setAsActiveItem) {
 		SetActiveItem(item);
@@ -178,6 +206,7 @@ void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 	//Activate it
 	playerItems[ActiveItemIndex]->SetActorEnableCollision(false);
 	playerItems[ActiveItemIndex]->ActivateItem();
+	playerItems[ActiveItemIndex]->DisablePhysics();
 	//Enabled an item, so the player is no longer using hands
 	player->DisableHands();
 }
