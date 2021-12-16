@@ -49,11 +49,11 @@ void APlayerUnit::BeginPlay()
 	moveableHandler->player = this;
 	inventory->player = this;
 	EnableHands();
-	check(GEngine != nullptr)
-
+	check(GEngine != nullptr) {
 		// Display a debug message for five seconds. 
 	   // The -1 "Key" value (first argument) indicates that we will never need to update or refresh this message.
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Using PlayerUnit"));
+	}
 }
 
 // Called every frame
@@ -90,6 +90,7 @@ void APlayerUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Drop Item", IE_Pressed, this, &APlayerUnit::DropItem);
 }
 
+#pragma region Move functions
 void APlayerUnit::MoveForward(float Value)
 {
 	// Find out which way is "forward" and record that the player wants to move that way.
@@ -113,7 +114,9 @@ void APlayerUnit::StopJump()
 {
 	bPressedJump = false;
 }
+#pragma endregion
 
+#pragma region Interaction functions
 void APlayerUnit::Interact() {
 	// get the camera transform
 	FVector CameraLoc = FPSCamera->GetComponentLocation();
@@ -123,7 +126,7 @@ void APlayerUnit::Interact() {
 	FVector Start = CameraLoc;
 	// you need to add a uproperty to the header file for a float PlayerInteractionDistance
 	FVector End = CameraLoc + (CameraRot.Vector() * InteractionDistance);
-	
+
 	FHitResult HitResult;
 	FCollisionQueryParams TraceParams;
 	TraceParams.AddIgnoredActor(this);
@@ -136,9 +139,11 @@ void APlayerUnit::Interact() {
 	else {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Didnt hit actor"));
 	};
-	
-}
 
+}
+#pragma endregion
+
+#pragma region Moving items functions
 void APlayerUnit::StartMovingItem()
 {
 	// get the camera transform
@@ -167,6 +172,9 @@ void APlayerUnit::EndMovingItem()
 	moveableHandler->EndMoving();
 }
 
+#pragma endregion
+
+#pragma region Inventory and items
 void APlayerUnit::UseLeftClick()
 {
 	if (bUsesHands) {
@@ -213,7 +221,7 @@ void APlayerUnit::PutAwayItem()
 		//If there was an item to enable
 		EnableHands();
 	}
-	
+
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Equipped items : % d"), !bUsesHands));
 }
 
@@ -230,7 +238,7 @@ void APlayerUnit::EnableHands()
 	inventory->EquipItem(false);
 	//Enable hands mesh
 	handsMesh->SetVisibility(true, true);
-	
+
 }
 
 void APlayerUnit::DisableHands()
@@ -238,6 +246,8 @@ void APlayerUnit::DisableHands()
 	handsMesh->SetVisibility(false, true);
 	bUsesHands = false;
 }
+
+#pragma endregion
 
 FPlayerSave APlayerUnit::GetPlayerSave() {
 	FPlayerSave save;

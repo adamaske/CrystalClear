@@ -190,7 +190,6 @@ void UInventoryComponent::AddItem(AInventoryItem* item, bool setAsActiveItem)
 	
 }
 
-
 void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 {
 	//Disable previous active
