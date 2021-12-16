@@ -22,3 +22,4 @@ void UInventoryPickupComponent::PickedUp()
 void UInventoryPickupComponent::Dropped()
 {
 }
+

@@ -4,7 +4,6 @@
 #include "InventoryComponent.h"
 #include "PlayerUnit.h"
 #include "InventoryItem.h"
-#include "PlayerHandComponent.h"
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
 {
@@ -32,6 +31,10 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+	if (playerItems[ActiveItemIndex]) {
+		playerItems[ActiveItemIndex]->SetActorLocation(player->hand->GetComponentLocation());
+		playerItems[ActiveItemIndex]->SetActorRotation(player->hand->GetComponentRotation());
+	}
 }
 
 void UInventoryComponent::ActivateNextItem(int dir)
@@ -39,68 +42,69 @@ void UInventoryComponent::ActivateNextItem(int dir)
 	if (dir == 0) {
 		return;
 	}
-	int index;
-	for (int i = 0; i < playerItems.Num(); i++) {
-		if (playerItems[i] == activeItem) {
-			index = 0;
-		}
+	if (playerItems[ActiveItemIndex]) {
+		playerItems[ActiveItemIndex]->DisableItem();
 	}
-	int nextIndex = index;
-	if (dir == 1) {
-		for (int i = index+1; i < playerItems.Num(); i++) {
-			if (playerItems[i]) {
-				nextIndex = i;
-				break;
-			}
+	ActiveItemIndex += dir;
 
-		}
-		for (int i =0; i > index; i++) {
-			if (playerItems[i]) {
-				nextIndex = i;
-				break;
-			}
-		}
+	if (ActiveItemIndex >= playerItems.Num()) {
+		//If it went over, set it to 0
+		ActiveItemIndex = 0;
 	}
-	else if (dir == -1) {
-		for (int i = index-1; i > -1; i--) {
-			if (playerItems[i]) {
-				nextIndex = i;
-				break;
-			}
-		}
-		//Start at index
-		for (int i = playerItems.Num(); i > index +1; i++) {
-			if (playerItems[i]) {
-				nextIndex = i;
-				break;
-			}
-		}
+	else if (ActiveItemIndex < 0) {
+		//If it went under 0, set it to the top
+		ActiveItemIndex = playerItems.Num() - 1;
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, FString::Printf(TEXT("Swapped item %d"), nextIndex));
-	SetActiveItem(playerItems[nextIndex]);
-}
-
-void UInventoryComponent::CreateAllItems()
-{
-}
-
-void UInventoryComponent::InitInventory(APlayerUnit* p)
-{
-
-}
-
-void UInventoryComponent::AddItem(AInventoryItem* item, bool setAsActiveItem)
-{
-	playerItems.Add(item);
-	if (setAsActiveItem) {
-		DisableItem(activeItem, true);
-		activeItem = item;
-		SetActiveItem(item);
+	if (playerItems[ActiveItemIndex]) {
+		SetActiveItem(playerItems[ActiveItemIndex]);
 	}
 	else {
-		DisableItem(item, true);
+		//There is no items here, so the player is using hands
+		player->EnableHands();
 	}
-	
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %d"), ActiveItemIndex));
+}
+
+
+bool UInventoryComponent::EquipItem(bool equip)
+{
+	if (equip) {
+		//Check if the last activeItem can be used enabled again
+		if (playerItems[ActiveItemIndex]) {
+			//Activate this
+			SetActiveItem(playerItems[ActiveItemIndex]);
+			//Return true since it could equip
+			return true;
+		}
+		else if(CanSetNextItem()){ 
+			//If there is another item that can be enabled, use it
+			//Get the next possible item
+			SetActiveItem(playerItems[ActiveItemIndex]);
+			return true;
+		}
+	}
+	else {
+		if (playerItems[ActiveItemIndex]) {
+			//Disable activeItem
+			playerItems[ActiveItemIndex]->DisableItem();
+			return false;
+		}
+	}
+	return false;
+}
+
+AInventoryItem* UInventoryComponent::ActiveItem()
+{
+	return playerItems[ActiveItemIndex];
+}
+
+void UInventoryComponent::InitInventory(FInventorySave file)
+{
+	//Create all the items
+	//Go through all the ids, spawn accordingly
+	for (int i = 0; i < file.IDs.Num(); i++) {
+		AddItem(file.IDs[i]);
+	}
 }
 
 void UInventoryComponent::AddItem(int id)
@@ -117,40 +121,63 @@ void UInventoryComponent::AddItem(int id)
 	//Spawn the item
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	
+
 	item = GetWorld()->SpawnActor<AInventoryItem>(allItems[index], GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation(), SpawnParams);
-	
 
 	//This item should just be in inventory, so disable it
-	DisableItem(item, true);
+	item->DisableItem();
+	AddItem(item, false);
 }
+
+bool UInventoryComponent::CanSetNextItem()
+{
+	//Get the next index where there is an item
+	for (int i = ActiveItemIndex + 1; i < playerItems.Num(); i++) {
+		if (playerItems[i]) {
+			ActiveItemIndex = i;
+			return true;
+		}
+	}
+	//Go from the the bttom
+	//Get the next 
+	for (int i = 0; i < ActiveItemIndex; i++) {
+		if (playerItems[i]) {
+			ActiveItemIndex = i;
+			return true;
+		}
+	}
+	return false;
+}
+
+void UInventoryComponent::AddItem(AInventoryItem* item, bool setAsActiveItem)
+{
+	playerItems.Add(item);
+	
+	if (setAsActiveItem) {
+		SetActiveItem(item);
+	}
+	else {
+		item->DisableItem();
+	}
+	
+}
+
 
 void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 {
-	if (activeItem) {
-		DisableItem(activeItem, true);
+	//Disable previous active
+	if (playerItems[ActiveItemIndex]) {
+		playerItems[ActiveItemIndex]->DisableItem();
 	}
-	activeItem = item;
+	//Find new ActiveItemIndex
+	for (int i = 0; i < playerItems.Num(); i++) {
+		if (playerItems[i] == item) {
+			ActiveItemIndex = i;
+		}
+	}
 	//Activate it
-	DisableItem(activeItem, false);
-	player->handComponent->GetItem(Cast<AActor>(activeItem));
-	
-}
-
-void UInventoryComponent::DisableItem(AInventoryItem* item,bool disable) {
-	if (!item) {
-		return;
-	}
-	if (disable) {
-		item->SetActorHiddenInGame(true);
-		item->SetActorTickEnabled(false);
-		item->SetActorEnableCollision(false);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Disabled actor"));
-	}
-	else {
-		item->SetActorHiddenInGame(false);
-		item->SetActorTickEnabled(true);
-		item->SetActorEnableCollision(true);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Enabled actor"));
-	}
+	playerItems[ActiveItemIndex]->SetActorEnableCollision(false);
+	playerItems[ActiveItemIndex]->ActivateItem();
+	//Enabled an item, so the player is no longer using hands
+	player->DisableHands();
 }

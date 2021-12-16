@@ -30,10 +30,20 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	 FInventoryItemInfo GetItemSave();
+	FInventoryItemInfo GetItemSave();
 
 	virtual void Used(class PlayerUnit* player);
 	UPROPERTY(EditAnywhere)
 	FInventoryItemInfo ItemInfo;
+	UPROPERTY(EditAnywhere)
 	int ItemID = 0;
+
+	void DisableItem();
+	void ActivateItem();
+
+	//
+	UPROPERTY(EditAnywhere)
+		class UInventoryPickupComponent* pickupComponent;
+	virtual void Use1();
+	virtual void Use2();
 };

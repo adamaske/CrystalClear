@@ -19,6 +19,7 @@ public:
 	virtual void BeginPlay() override;
 	void PickedUp();
 	void Dropped();
+	
 	UPROPERTY(EditAnywhere)
 		bool bActivateMeOnPickup = true;
 };

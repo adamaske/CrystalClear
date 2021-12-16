@@ -30,23 +30,36 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	class APlayerUnit* player;
+	//All items that the player could possibly have
 	UPROPERTY(EditAnywhere)
 		TArray<TSubclassOf<class AInventoryItem>> allItems;
+	//The items the player actually have
 	UPROPERTY(EditAnywhere)
-		TArray<class AInventoryItem*> playerItems;
+		TArray<class AInventoryItem*> playerItems{nullptr};
+	//The currently equipped item
 	UPROPERTY(EditAnywhere)
 		class AInventoryItem* activeItem;
-
-	void DisableItem(AInventoryItem* item,bool disable);
+	//Adds item, true = equip this item now
 	void AddItem(AInventoryItem* item, bool setAsActiveItem);
-	void AddItem(int id);
-	void SetActiveItem(AInventoryItem* item);
-	void SetActiveItem(int index);
-	class APlayerUnit* player;
+	//-1 down in the array, 1 = up, 
 	void ActivateNextItem(int dir);
-	int activeItemIndex = 0;
-private:
-	void CreateAllItems();
-	void InitInventory(class APlayerUnit* player);
+	
+	//True = equipp, False = dequip
+	bool EquipItem(bool equip);
 
+	//Returns the active item
+	AInventoryItem* ActiveItem();
+
+
+private:
+	void InitInventory(FInventorySave save);
+
+	void SetActiveItem(AInventoryItem* item);
+
+	int ActiveItemIndex = 0;
+
+	void AddItem(int id);
+
+	bool CanSetNextItem();
 };

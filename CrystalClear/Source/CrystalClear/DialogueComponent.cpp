@@ -4,5 +4,5 @@
 #include "DialogueComponent.h"
 
 void UDialogueComponent::Interact(APlayerUnit* player) {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, TEXT("Started dialouge"));
+	GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Cyan, TEXT("Started dialouge"));
 }

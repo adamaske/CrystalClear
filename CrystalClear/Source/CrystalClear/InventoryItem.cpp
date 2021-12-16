@@ -2,13 +2,14 @@
 
 
 #include "InventoryItem.h"
-
+#include "InventoryPickupComponent.h"
 // Sets default values
 AInventoryItem::AInventoryItem()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	pickupComponent = CreateDefaultSubobject<UInventoryPickupComponent>(TEXT("PickupComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -28,6 +29,7 @@ void AInventoryItem::Tick(float DeltaTime)
 FInventoryItemInfo AInventoryItem::GetItemSave()
 {
 	FInventoryItemInfo save;
+	save.ItemID = ItemID;
 	return save;
 }
 
@@ -36,3 +38,26 @@ void AInventoryItem::Used(PlayerUnit* player)
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Cyan, TEXT("Used item"));
 }
 
+
+void AInventoryItem::DisableItem()
+{
+	SetActorHiddenInGame(true);
+	SetActorTickEnabled(false);
+	SetActorEnableCollision(false);
+}
+
+void AInventoryItem::ActivateItem()
+{
+	SetActorHiddenInGame(false);
+	SetActorTickEnabled(true);
+	SetActorEnableCollision(true);
+
+}
+
+void AInventoryItem::Use1()
+{
+}
+
+void AInventoryItem::Use2()
+{
+}

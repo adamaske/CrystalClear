@@ -61,12 +61,17 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class UInventoryComponent* inventory;
 	void PickupItem(class AInventoryItem* item, bool activate);
-
+	void DropItem();
 	//Hand
 	UPROPERTY(EditAnywhere)
-	 class UPlayerHandComponent* handComponent;
-
+	class USceneComponent* hand;
+	//Enable hands
+	void PutAwayItem();
 	void NextItem(float dir);
+
+	bool bUsesHands = false;
+	void EnableHands();
+	void DisableHands();
 private:
 	UFUNCTION()
 		FPlayerSave GetPlayerSave();
@@ -80,6 +85,9 @@ private:
 	void EndMovingItem();
 	class UMoveableHandler* moveableHandler;
 
-	//
-	
+	//Using Items
+	void UseLeftClick();
+	void UseRightClick();
+	UPROPERTY(EditAnywhere)
+	class UStaticMeshComponent* handsMesh;
 };

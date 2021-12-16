@@ -6,8 +6,9 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "MoveableHandler.h"
 #include "InventoryComponent.h"
+#include "InventoryItem.h"
 #include "MoveableComponent.h"
-#include "PlayerHandComponent.h"
+
 // Sets default values
 APlayerUnit::APlayerUnit()
 {
@@ -34,9 +35,11 @@ APlayerUnit::APlayerUnit()
 	moveableHandler->player = this;
 
 	inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+	hand = CreateDefaultSubobject<USceneComponent>(TEXT("Hand"));
+	hand->SetupAttachment(FPSCamera);
 
-	handComponent = CreateDefaultSubobject<UPlayerHandComponent>(TEXT("Player Hand"));
-	handComponent->hand->SetupAttachment(FPSCamera);
+	handsMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Hands"));
+	handsMesh->SetupAttachment(FPSCamera);
 }
 
 // Called when the game starts or when spawned
@@ -45,7 +48,7 @@ void APlayerUnit::BeginPlay()
 	Super::BeginPlay();
 	moveableHandler->player = this;
 	inventory->player = this;
-	handComponent->player = this;
+	EnableHands();
 	check(GEngine != nullptr)
 
 		// Display a debug message for five seconds. 
@@ -58,7 +61,6 @@ void APlayerUnit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	//UE_LOG(LogTemp, Warning, TEXT("GrabLocation %s"), *(GrabLocation->GetComponentLocation()).ToString());
 }
 
 // Called to bind functionality to input
@@ -79,9 +81,15 @@ void APlayerUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	// Set up "moving" bindings.
 	PlayerInputComponent->BindAction("Carry item", IE_Pressed, this, &APlayerUnit::StartMovingItem);
 	PlayerInputComponent->BindAction("Carry item", IE_Released, this, &APlayerUnit::EndMovingItem);
-
-	// Set up "look" bindings.
+	// Set up "moving" bindings.
+	PlayerInputComponent->BindAction("Use 1", IE_Pressed, this, &APlayerUnit::UseLeftClick);
+	PlayerInputComponent->BindAction("Use 2", IE_Released, this, &APlayerUnit::UseRightClick);
+	// Set up "MouseScroll" bindings.
 	PlayerInputComponent->BindAxis("MouseScroll", this, &APlayerUnit::NextItem);
+	// Set up "using items" bindings.
+	PlayerInputComponent->BindAction("Put Away Item", IE_Pressed, this, &APlayerUnit::PutAwayItem);
+	PlayerInputComponent->BindAction("Use Left", IE_Pressed, this, &APlayerUnit::UseLeftClick);
+	PlayerInputComponent->BindAction("Use Right", IE_Pressed, this, &APlayerUnit::UseRightClick);
 }
 
 void APlayerUnit::MoveForward(float Value)
@@ -124,10 +132,8 @@ void APlayerUnit::Interact() {
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility)) {
 		if (HitResult.GetActor()->GetComponentByClass(UInteractableComponent::StaticClass())) {
 			interactable = Cast<UInteractableComponent>(HitResult.GetActor()->GetComponentByClass(UInteractableComponent::StaticClass()));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Hit InteractableComponent"));
 			interactable->Interact(this);
 		}
-		
 	}
 	else {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Didnt hit actor"));
@@ -163,14 +169,79 @@ void APlayerUnit::EndMovingItem()
 	moveableHandler->EndMoving();
 }
 
+void APlayerUnit::UseLeftClick()
+{
+	if (bUsesHands) {
+
+	}
+	else {
+		inventory->ActiveItem()->Use1();
+	}
+}
+
+void APlayerUnit::UseRightClick()
+{
+	if (bUsesHands) {
+
+	}
+	else {
+		inventory->ActiveItem()->Use2();
+	}
+}
+
 void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
 {
 	inventory->AddItem(item, activate);
 }
 
+void APlayerUnit::DropItem()
+{
+	if (bUsesHands) {
+		return;
+	}
+}
+
+void APlayerUnit::PutAwayItem()
+{
+	if (bUsesHands) {
+		//If there was an item to enable
+		if (inventory->EquipItem(true)) {
+			bUsesHands = false;
+			handsMesh->SetVisibility(false);
+		}
+		else {
+			//There was no items to equip
+			EnableHands();
+		}
+	}
+	else {
+		//If there was an item to enable
+		EnableHands();
+	}
+	
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Equipped items : % d"), !bUsesHands));
+}
+
 void APlayerUnit::NextItem(float dir)
 {
 	inventory->ActivateNextItem(dir);
+}
+
+void APlayerUnit::EnableHands()
+{
+	//Uses hands now
+	bUsesHands = true;
+	//Disables inventory
+	inventory->EquipItem(false);
+	//Enable hands mesh
+	handsMesh->SetVisibility(true, true);
+	
+}
+
+void APlayerUnit::DisableHands()
+{
+	handsMesh->SetVisibility(false, true);
+	bUsesHands = false;
 }
 
 FPlayerSave APlayerUnit::GetPlayerSave() {
