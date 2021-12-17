@@ -9,8 +9,10 @@ USTRUCT()
 struct FInventorySave {
 	GENERATED_BODY()
 public:
+	UPROPERTY(VisibleAnywhere, Category = Basic)
 	TArray<int> IDs;
-
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+		int active = 0;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -35,7 +37,7 @@ public:
 	UPROPERTY(EditAnywhere)
 		TArray<TSubclassOf<class AInventoryItem>> allItems;
 	//The items the player actually have
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 		TArray<class AInventoryItem*> playerItems{nullptr};
 	//The currently equipped item
 	UPROPERTY(EditAnywhere)
@@ -52,8 +54,14 @@ public:
 	AInventoryItem* ActiveItem();
 
 	void DropItem();
+
+	FInventorySave GetInventorySave();
+	//Sets the inventory to state from save struct
+	void SetInventory(FInventorySave save);
+
+	//Backpack
+
 private:
-	void InitInventory(FInventorySave save);
 
 	void SetActiveItem(AInventoryItem* item);
 
@@ -62,4 +70,5 @@ private:
 	void AddItem(int id);
 
 	bool CanSetNextItem();
+
 };

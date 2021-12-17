@@ -11,7 +11,6 @@ UInventoryComponent::UInventoryComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
 
@@ -20,10 +19,7 @@ void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-	
 }
-
 
 // Called every frame
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -32,6 +28,9 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 	// ...
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %d"), ActiveItemIndex));
+	if (ActiveItemIndex > playerItems.Num()) {
+		ActiveItemIndex = 0;
+	}
 	if (playerItems[ActiveItemIndex]) {
 		playerItems[ActiveItemIndex]->SetActorLocation(player->hand->GetComponentLocation());
 		playerItems[ActiveItemIndex]->SetActorRotation(player->hand->GetComponentRotation());
@@ -65,7 +64,6 @@ void UInventoryComponent::ActivateNextItem(int dir)
 	}
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %d"), ActiveItemIndex));
 }
-
 
 bool UInventoryComponent::EquipItem(bool equip)
 {
@@ -101,7 +99,10 @@ AInventoryItem* UInventoryComponent::ActiveItem()
 
 void UInventoryComponent::DropItem()
 {
-
+	//Dont do anything if the player dosent have a item equipped
+	if (player->bUsesHands) {
+		return;
+	}
 	if (playerItems[ActiveItemIndex]) {
 		AInventoryItem* item = playerItems[ActiveItemIndex];
 		if (item) {
@@ -116,15 +117,16 @@ void UInventoryComponent::DropItem()
 	}
 }
 
-void UInventoryComponent::InitInventory(FInventorySave file)
+void UInventoryComponent::SetInventory(FInventorySave file)
 {
-	//Create all the items
+	playerItems.Empty();
+	playerItems.Add(nullptr);
+	ActiveItemIndex = 0;
 	//Go through all the ids, spawn accordingly
 	for (int i = 0; i < file.IDs.Num(); i++) {
 		AddItem(file.IDs[i]);
 	}
 }
-
 void UInventoryComponent::AddItem(int id)
 {
 	AInventoryItem* item;
@@ -145,6 +147,20 @@ void UInventoryComponent::AddItem(int id)
 	//This item should just be in inventory, so disable it
 	item->DisableItem();
 	AddItem(item, false);
+}
+
+void UInventoryComponent::AddItem(AInventoryItem* item, bool setAsActiveItem)
+{
+	playerItems.Add(item);
+
+
+	if (setAsActiveItem) {
+		SetActiveItem(item);
+	}
+	else {
+		item->DisableItem();
+	}
+
 }
 
 bool UInventoryComponent::CanSetNextItem()
@@ -176,20 +192,6 @@ bool UInventoryComponent::CanSetNextItem()
 	return false;
 }
 
-void UInventoryComponent::AddItem(AInventoryItem* item, bool setAsActiveItem)
-{
-	playerItems.Add(item);
-	
-	
-	if (setAsActiveItem) {
-		SetActiveItem(item);
-	}
-	else {
-		item->DisableItem();
-	}
-	
-}
-
 void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 {
 	//Disable previous active
@@ -208,4 +210,15 @@ void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 	playerItems[ActiveItemIndex]->DisablePhysics();
 	//Enabled an item, so the player is no longer using hands
 	player->DisableHands();
+}
+
+FInventorySave UInventoryComponent::GetInventorySave() {
+	FInventorySave save;
+	for (int i = 0; i < playerItems.Num(); i++) {
+		if (playerItems[i]) {
+			save.IDs.Add(playerItems[i]->ItemID);
+		}
+	}
+	save.active = ActiveItemIndex;
+	return save;
 }

@@ -28,18 +28,10 @@ void AInventoryItem::Tick(float DeltaTime)
 
 }
 
-FInventoryItemInfo AInventoryItem::GetItemSave()
-{
-	FInventoryItemInfo save;
-	save.ItemID = ItemID;
-	return save;
-}
-
 void AInventoryItem::Used(PlayerUnit* player)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Cyan, TEXT("Used item"));
 }
-
 
 void AInventoryItem::DisableItem()
 {

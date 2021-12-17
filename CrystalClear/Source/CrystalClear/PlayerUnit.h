@@ -11,7 +11,13 @@
 USTRUCT()
 struct FPlayerSave {
 	GENERATED_BODY()
-	double x, y, z;
+public:
+		UPROPERTY(VisibleAnywhere, Category = Basic)
+		double x = 0;
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+		double y = 0;
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+		double z = 0;
 };
 
 UCLASS()
@@ -34,9 +40,27 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
+		float HP = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
+		FString playerName = "Adam";
 private:
+
+#pragma region Saving & Loading
+public:
 	UFUNCTION()
 		FPlayerSave GetPlayerSave();
+	class UCCSaveGame* saveGame;
+private:
+	void SaveGame();
+	void LoadGame();
+	//Function called when saving finished
+	void SaveGameDelegateFunction(const FString& SlotName, const int32 UserIndex, bool bSuccess);
+	void LoadGameDelegateFunction(const FString& SlotName, const int32 UserIndex, class USaveGame* LoadedGameData);
+	//Set the player
+	void SetPlayer(FPlayerSave save);
+#pragma endregion
+
 
 #pragma region Move functions
 private:
@@ -65,7 +89,7 @@ public:
 
 #pragma region Inventory & Items
 public:
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 		class UInventoryComponent* inventory;
 	//
 	void PickupItem(class AInventoryItem* item, bool activate);

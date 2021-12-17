@@ -8,7 +8,8 @@
 #include "InventoryComponent.h"
 #include "InventoryItem.h"
 #include "MoveableComponent.h"
-
+#include "CCSaveGame.h"
+#include "Kismet/GameplayStatics.h"
 // Sets default values
 APlayerUnit::APlayerUnit()
 {
@@ -88,6 +89,9 @@ void APlayerUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Use 1", IE_Pressed, this, &APlayerUnit::UseLeftClick);
 	PlayerInputComponent->BindAction("Use 2", IE_Released, this, &APlayerUnit::UseRightClick);
 	PlayerInputComponent->BindAction("Drop Item", IE_Pressed, this, &APlayerUnit::DropItem);
+	//Saving
+	PlayerInputComponent->BindAction("Save", IE_Pressed, this, &APlayerUnit::SaveGame);
+	PlayerInputComponent->BindAction("Load", IE_Pressed, this, &APlayerUnit::LoadGame);
 }
 
 #pragma region Move functions
@@ -249,6 +253,52 @@ void APlayerUnit::DisableHands()
 
 #pragma endregion
 
+#pragma region Saving & Loading Functions
+
+void APlayerUnit::SaveGame() {
+	if (UCCSaveGame* SaveGameInstance = Cast<UCCSaveGame>(UGameplayStatics::CreateSaveGameObject(UCCSaveGame::StaticClass())))
+	{
+		// Set up the (optional) delegate.
+		FAsyncSaveGameToSlotDelegate SavedDelegate;
+		// USomeUObjectClass::SaveGameDelegateFunction is a void function that takes the following parameters: const FString& SlotName, const int32 UserIndex, bool bSuccess
+		SavedDelegate.BindUObject(this, &APlayerUnit::SaveGameDelegateFunction);
+
+		SaveGameInstance->playerSave = GetPlayerSave();
+		SaveGameInstance->inventorySave = inventory->GetInventorySave();
+		
+		// Start async save process.
+		UGameplayStatics::AsyncSaveGameToSlot(SaveGameInstance, "User", 0, SavedDelegate);
+	}
+}
+void APlayerUnit::LoadGame() {
+	// Set up the delegate.
+	FAsyncLoadGameFromSlotDelegate LoadedDelegate;
+	// USomeUObjectClass::LoadGameDelegateFunction is a void function that takes the following parameters: const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData
+	LoadedDelegate.BindUObject(this, &APlayerUnit::LoadGameDelegateFunction);
+	UGameplayStatics::AsyncLoadGameFromSlot("User", 0, LoadedDelegate);
+}
+
+void APlayerUnit::SaveGameDelegateFunction(const FString& SlotName, const int32 UserIndex, bool bSuccess)
+{
+	//Print sucess
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Saved slot : %s"), *SlotName));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("User index : %d"), UserIndex));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Success : %d"), bSuccess));
+}
+
+void APlayerUnit::LoadGameDelegateFunction(const FString& SlotName, const int32 UserIndex, USaveGame* LoadedGameData)
+{
+	//Print loading
+	if (UCCSaveGame* SaveGameInstance = Cast<UCCSaveGame>(LoadedGameData))
+	{
+		
+		SetPlayer(SaveGameInstance->playerSave);
+		inventory->SetInventory(SaveGameInstance->inventorySave);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Loaded slot : %s"), *SlotName));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("User index : %d"), UserIndex));
+	}
+	
+}
 FPlayerSave APlayerUnit::GetPlayerSave() {
 	FPlayerSave save;
 	save.x = GetActorLocation().X;
@@ -256,3 +306,12 @@ FPlayerSave APlayerUnit::GetPlayerSave() {
 	save.z = GetActorLocation().Z;
 	return save;
 }
+void APlayerUnit::SetPlayer(FPlayerSave save)
+{
+	FVector newPos = FVector(save.x, save.y, save.z);
+
+	SetActorLocation(newPos);
+
+}
+
+#pragma endregion

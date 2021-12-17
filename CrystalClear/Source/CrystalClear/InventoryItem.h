@@ -6,12 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "InventoryItem.generated.h"
 
-USTRUCT()
-struct FInventoryItemInfo {
-	GENERATED_BODY()
-public:
-	int ItemID = 0;
-};
 
 UCLASS()
 class CRYSTALCLEAR_API AInventoryItem : public AActor
@@ -30,24 +24,33 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	FInventoryItemInfo GetItemSave();
-
 	virtual void Used(class PlayerUnit* player);
-	UPROPERTY(EditAnywhere)
-	FInventoryItemInfo ItemInfo;
-	UPROPERTY(EditAnywhere)
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item")
 	int ItemID = 0;
+
+	UPROPERTY(EditAnywhere)
+		class UStaticMeshComponent* mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		FText UseActionText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		class UTexture2D* Thumbnail;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		FText ItemDisplayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		FText ItemDescription;
+
+	class UInventoryPickupComponent* pickupComponent;
 	class UPrimitiveComponent* root;
+
 	void DisableItem();
 	void ActivateItem();
 	void DisablePhysics();
 	void EnablePhysics();
-	//U
-	UPROPERTY(EditAnywhere)
-		class UStaticMeshComponent* mesh;
-	//
-	UPROPERTY(EditAnywhere)
-		class UInventoryPickupComponent* pickupComponent;
 	virtual void Use1();
 	virtual void Use2();
 };
