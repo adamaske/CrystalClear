@@ -185,6 +185,7 @@ void APlayerUnit::UseLeftClick()
 
 	}
 	else {
+		if(inventory->ActiveItem() != nullptr)
 		inventory->ActiveItem()->Use1();
 	}
 }
@@ -195,7 +196,8 @@ void APlayerUnit::UseRightClick()
 
 	}
 	else {
-		inventory->ActiveItem()->Use2();
+		if (inventory->ActiveItem() != nullptr)
+			inventory->ActiveItem()->Use2();
 	}
 }
 void APlayerUnit::DropItem()

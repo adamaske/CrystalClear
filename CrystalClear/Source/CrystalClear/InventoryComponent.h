@@ -83,6 +83,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 		bool PutItemInBackpack(AInventoryItem* item, int toIndex);
+
+	void UpdateActionBar();
 private:
 
 	void SetActiveItem(AInventoryItem* item);

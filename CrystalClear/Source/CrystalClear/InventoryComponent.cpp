@@ -176,11 +176,13 @@ void UInventoryComponent::AddItem(AInventoryItem* item)
 	for (int i = 0; i < BackpackItems.Num(); i++) {
 		if (BackpackItems[i] == nullptr) {
 			BackpackItems[i] = item;
+			BackpackItems[i]->DisableItem();
 			return;
 		}
 	}
 	return;
 }
+
 #pragma region Blueprint functions
 bool UInventoryComponent::SwapItemsInActionBar(AInventoryItem* item1, int item2)
 {
@@ -207,6 +209,7 @@ bool UInventoryComponent::SwapItemsInActionBar(AInventoryItem* item1, int item2)
 		ActionBar[item2] = ActionBar[item1Index];
 		ActionBar[item1Index] = nullptr;
 	}
+	UpdateActionBar();
 	return false;
 }
 
@@ -218,6 +221,7 @@ bool UInventoryComponent::AddToActionBarRemoveFromBackpack(int backpackIndex, in
 	temp = ActionBar[actionBarIndex];
 	ActionBar[actionBarIndex] = BackpackItems[backpackIndex];
 	BackpackItems[backpackIndex] = temp;
+	UpdateActionBar();
 	return false;
 }
 
@@ -228,6 +232,7 @@ bool UInventoryComponent::RemoveFromActionBarAddToBackpack(int actionBarIndex, i
 	temp = BackpackItems[backpackIndex];
 	BackpackItems[backpackIndex] = ActionBar[actionBarIndex];
 	ActionBar[actionBarIndex] = temp;
+	UpdateActionBar();
 	return false;
 }
 
@@ -238,6 +243,7 @@ bool UInventoryComponent::SwapItemsInBackpack(int b1, int b2)
 	temp = BackpackItems[b1];
 	BackpackItems[b1] = BackpackItems[b2];
 	BackpackItems[b2] = temp;
+	UpdateActionBar();
 	return true;
 }
 
@@ -270,6 +276,26 @@ void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 	ActionBar[ActionBarIndex]->DisablePhysics();
 	//Enabled an item, so the player is no longer using hands
 	player->DisableHands();
+}
+
+void UInventoryComponent::UpdateActionBar() {
+	for (int i = 0; i < BackpackItems.Num(); i++) {
+		if (BackpackItems[i] != nullptr) {
+			BackpackItems[i]->DisableItem();
+		}
+	}
+	for (int i = 0; i < ActionBar.Num(); i++) {
+		if (i != ActionBarIndex) {
+			if (ActionBar[i] != nullptr) {
+				ActionBar[i]->DisableItem();
+			}
+		}
+		else {
+			if (ActionBar[ActionBarIndex] != nullptr) {
+				ActionBar[ActionBarIndex]->ActivateItem();
+			}
+		}
+	}
 }
 
 FInventorySave UInventoryComponent::GetInventorySave() {
