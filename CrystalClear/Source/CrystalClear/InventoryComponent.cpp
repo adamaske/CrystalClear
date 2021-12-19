@@ -119,7 +119,6 @@ void UInventoryComponent::SetInventory(FInventorySave file)
 	for (int i = 0; i < BackpackItems.Num(); i++) {
 		BackpackItems[i] = nullptr;
 	}
-	ActiveItemIndex = 0;
 	//Go through all the ids, spawn accordingly
 	for (int i = 0; i < file.BPItems.Num(); i++) {
 		AddItem(file.BPItems[i].ID, file.BPItems[i].index);
