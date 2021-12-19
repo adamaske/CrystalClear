@@ -205,7 +205,7 @@ void APlayerUnit::DropItem()
 
 void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
 {
-	inventory->AddItem(item, activate);
+	inventory->AddItem(item);
 }
 
 void APlayerUnit::PutAwayItem()

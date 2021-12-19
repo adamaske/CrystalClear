@@ -4,15 +4,25 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "InventoryItem.h"
 #include "InventoryComponent.generated.h"
+USTRUCT()
+struct FInventoryItemSave {
+	GENERATED_BODY()
+public:
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+	int ID;
+	UPROPERTY(VisibleAnywhere, Category = Basic)
+	int index;
+};
+
 USTRUCT()
 struct FInventorySave {
 	GENERATED_BODY()
 public:
-	UPROPERTY(VisibleAnywhere, Category = Basic)
-	TArray<int> IDs;
-	UPROPERTY(VisibleAnywhere, Category = Basic)
-		int active = 0;
+	TArray<FInventoryItemSave> BPItems;
+	int qaIndex = 0;
+	TArray<FInventoryItemSave> QAItems;
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -36,31 +46,43 @@ public:
 	//All items that the player could possibly have
 	UPROPERTY(EditAnywhere)
 		TArray<TSubclassOf<class AInventoryItem>> allItems;
-	//The items the player actually have
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-		TArray<class AInventoryItem*> playerItems{nullptr};
-	//The currently equipped item
-	UPROPERTY(EditAnywhere)
-		class AInventoryItem* activeItem;
+
 	//Adds item, true = equip this item now
-	void AddItem(AInventoryItem* item, bool setAsActiveItem);
+	void AddItem(AInventoryItem* item);
 	//-1 down in the array, 1 = up, 
 	void ActivateNextItem(int dir);
-	
 	//True = equipp, False = dequip
 	bool EquipItem(bool equip);
-
 	//Returns the active item
 	AInventoryItem* ActiveItem();
 
 	void DropItem();
 
+	void DropItem(AInventoryItem* item);
 	FInventorySave GetInventorySave();
 	//Sets the inventory to state from save struct
 	void SetInventory(FInventorySave save);
 
 	//Backpack
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<AInventoryItem*> BackpackItems;
+	int BackpackSize = 20;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<AInventoryItem*> ActionBar;
+	int ActionBarSize = 5;
+	int ActionBarIndex = 0;
 
+	UFUNCTION(BlueprintCallable)
+	bool SwapItemsInActionBar(AInventoryItem* item1, int item2);
+	UFUNCTION(BlueprintCallable)
+	bool AddToActionBarRemoveFromBackpack(int backpackIndex, int actionBarIndex);
+	UFUNCTION(BlueprintCallable)
+	bool RemoveFromActionBarAddToBackpack(int actionBarIndex, int backpackIndex);
+	UFUNCTION(BlueprintCallable)
+	bool SwapItemsInBackpack(int bp1, int bp2);
+	
+	UFUNCTION(BlueprintCallable)
+		bool PutItemInBackpack(AInventoryItem* item, int toIndex);
 private:
 
 	void SetActiveItem(AInventoryItem* item);
@@ -68,7 +90,6 @@ private:
 	int ActiveItemIndex = 0;
 
 	void AddItem(int id);
-
-	bool CanSetNextItem();
+	void AddItem(int id, int index);
 
 };

@@ -48,7 +48,7 @@ private:
 
 #pragma region Saving & Loading
 public:
-	UFUNCTION()
+
 		FPlayerSave GetPlayerSave();
 	class UCCSaveGame* saveGame;
 private:

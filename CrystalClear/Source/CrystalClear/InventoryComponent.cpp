@@ -18,7 +18,12 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	for (int i = 0; i < BackpackSize; i++) {
+		BackpackItems.Add(nullptr);
+	}
+	for (int i = 0; i < ActionBarSize; i++) {
+		ActionBar.Add(nullptr);
+	}
 }
 
 // Called every frame
@@ -28,12 +33,9 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 	// ...
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %d"), ActiveItemIndex));
-	if (ActiveItemIndex > playerItems.Num()) {
-		ActiveItemIndex = 0;
-	}
-	if (playerItems[ActiveItemIndex]) {
-		playerItems[ActiveItemIndex]->SetActorLocation(player->hand->GetComponentLocation());
-		playerItems[ActiveItemIndex]->SetActorRotation(player->hand->GetComponentRotation());
+	if (ActionBar[ActionBarIndex]) {
+		ActionBar[ActionBarIndex]->SetActorLocation(player->hand->GetComponentLocation());
+		ActionBar[ActionBarIndex]->SetActorRotation(player->hand->GetComponentRotation());
 	}
 }
 
@@ -42,21 +44,21 @@ void UInventoryComponent::ActivateNextItem(int dir)
 	if (dir == 0) {
 		return;
 	}
-	if (playerItems[ActiveItemIndex]) {
-		playerItems[ActiveItemIndex]->DisableItem();
+	//Deactivate old active item
+	if (ActionBar[ActionBarIndex] != nullptr) {
+		ActionBar[ActionBarIndex]->DisableItem();
 	}
-	ActiveItemIndex += dir;
-
-	if (ActiveItemIndex >= playerItems.Num()) {
+	ActionBarIndex += dir;
+	if (ActionBarIndex >= ActionBar.Num()) {
 		//If it went over, set it to 0
-		ActiveItemIndex = 0;
+		ActionBarIndex = 0;
 	}
-	else if (ActiveItemIndex < 0) {
+	else if (ActionBarIndex < 0) {
 		//If it went under 0, set it to the top
-		ActiveItemIndex = playerItems.Num() - 1;
+		ActionBarIndex = ActionBar.Num() - 1;
 	}
-	if (playerItems[ActiveItemIndex]) {
-		SetActiveItem(playerItems[ActiveItemIndex]);
+	if (ActionBar[ActionBarIndex] != nullptr){
+		SetActiveItem(ActionBar[ActionBarIndex]);
 	}
 	else {
 		//There is no items here, so the player is using hands
@@ -67,66 +69,63 @@ void UInventoryComponent::ActivateNextItem(int dir)
 
 bool UInventoryComponent::EquipItem(bool equip)
 {
-	if (equip) {
-		//Check if the last activeItem can be used enabled again
-		if (playerItems[ActiveItemIndex]) {
-			//Activate this
-			SetActiveItem(playerItems[ActiveItemIndex]);
-			//Return true since it could equip
-			return true;
-		}
-		else if(CanSetNextItem()){ 
-			//If there is another item that can be enabled, use it
-			//Get the next possible item
-			SetActiveItem(playerItems[ActiveItemIndex]);
-			return true;
-		}
-	}
-	else {
-		if (playerItems[ActiveItemIndex]) {
-			//Disable activeItem
-			playerItems[ActiveItemIndex]->DisableItem();
-			return false;
-		}
-	}
+	
 	return false;
 }
 
 AInventoryItem* UInventoryComponent::ActiveItem()
 {
-	return playerItems[ActiveItemIndex];
+	return ActionBar[ActionBarIndex];
 }
 
+#pragma region Dropping
 void UInventoryComponent::DropItem()
 {
-	//Dont do anything if the player dosent have a item equipped
+	//This is for dropping the currently equipped quicka access item
 	if (player->bUsesHands) {
 		return;
 	}
-	if (playerItems[ActiveItemIndex]) {
-		AInventoryItem* item = playerItems[ActiveItemIndex];
+	if (ActionBar[ActionBarIndex] != nullptr) {
+		AInventoryItem* item = ActionBar[ActionBarIndex];
 		if (item) {
-			playerItems.Remove(item);
+			ActionBar[ActionBarIndex] = nullptr;
 			item->ActivateItem();
 			item->EnablePhysics();
 			item->SetActorRotation(player->GetActorRotation());
-			item->SetActorLocation(player->GetActorLocation() + FVector(200, 0 ,0));
-			CanSetNextItem();
-			player->EnableHands();
+			item->SetActorLocation(player->GetActorLocation() + FVector(200, 0, 0));
 		}
 	}
 }
 
-void UInventoryComponent::SetInventory(FInventorySave file)
+void UInventoryComponent::DropItem(AInventoryItem* item)
 {
-	playerItems.Empty();
-	playerItems.Add(nullptr);
-	ActiveItemIndex = 0;
-	//Go through all the ids, spawn accordingly
-	for (int i = 0; i < file.IDs.Num(); i++) {
-		AddItem(file.IDs[i]);
+	for (int i = 0; i < BackpackItems.Num(); i++) {
+		if (BackpackItems[i] == item) {
+			AInventoryItem* item = BackpackItems[i];
+			BackpackItems[i] = nullptr;
+			item->ActivateItem();
+			item->EnablePhysics();
+			item->SetActorRotation(player->GetActorRotation());
+			item->SetActorLocation(player->GetActorLocation() + FVector(200, 0, 0));
+			return;
+		}
 	}
 }
+#pragma endregion
+
+void UInventoryComponent::SetInventory(FInventorySave file)
+{
+	//Clear backpack
+	for (int i = 0; i < BackpackItems.Num(); i++) {
+		BackpackItems[i] = nullptr;
+	}
+	ActiveItemIndex = 0;
+	//Go through all the ids, spawn accordingly
+	for (int i = 0; i < file.BPItems.Num(); i++) {
+		AddItem(file.BPItems[i].ID, file.BPItems[i].index);
+	}
+}
+
 void UInventoryComponent::AddItem(int id)
 {
 	AInventoryItem* item;
@@ -146,79 +145,149 @@ void UInventoryComponent::AddItem(int id)
 
 	//This item should just be in inventory, so disable it
 	item->DisableItem();
-	AddItem(item, false);
+	AddItem(item);
 }
 
-void UInventoryComponent::AddItem(AInventoryItem* item, bool setAsActiveItem)
+void UInventoryComponent::AddItem(int id, int index)
 {
-	playerItems.Add(item);
-
-
-	if (setAsActiveItem) {
-		SetActiveItem(item);
+	AInventoryItem* item;
+	int itemIndex;
+	for (auto i = 0; i < allItems.Num(); i++) {
+		if (allItems[i]->GetDefaultObject<AInventoryItem>()->ItemID == id) {
+			itemIndex = i;
+			break;
+		}
 	}
-	else {
-		item->DisableItem();
-	}
 
+	//Spawn the item
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	item = GetWorld()->SpawnActor<AInventoryItem>(allItems[itemIndex], GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation(), SpawnParams);
+
+	//This item should just be in inventory, so disable it
+	item->DisableItem();
+	BackpackItems[index] = item;
 }
 
-bool UInventoryComponent::CanSetNextItem()
+void UInventoryComponent::AddItem(AInventoryItem* item)
 {
-	//Get the next index where there is an item
-	for (int i = ActiveItemIndex + 1; i < playerItems.Num(); i++) {
-		if (playerItems[i]) {
-			ActiveItemIndex = i;
-			return true;
+	//Adds item
+	for (int i = 0; i < BackpackItems.Num(); i++) {
+		if (BackpackItems[i] == nullptr) {
+			BackpackItems[i] = item;
+			return;
 		}
 	}
-	//Go from the the bttom
-	//Get the next 
-	for (int i = 0; i < ActiveItemIndex; i++) {
-		if (playerItems[i]) {
-			ActiveItemIndex = i;
-			return true;
+	return;
+}
+#pragma region Blueprint functions
+bool UInventoryComponent::SwapItemsInActionBar(AInventoryItem* item1, int item2)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("ActionBarSwap"));
+	//Get what index its on
+	int item1Index;
+	if (item1 != nullptr) {
+	
+		for (int i = 0; i < ActionBar.Num(); i++) {
+			if (ActionBar[i] == item1) {
+				item1Index = i;
+			}
 		}
 	}
-	//Go through the whole
-	for (int i = 0; i < playerItems.Num(); i++) {
-		if (playerItems[i]) {
-			ActiveItemIndex = i;
-			return true;
-		}
+	
+	//If both them has items, swap them
+	if (ActionBar[item1Index] != nullptr && ActionBar[item2] != nullptr) {
+		AInventoryItem* temp = ActionBar[item1Index];
+		ActionBar[item1Index] = ActionBar[item2];
+		ActionBar[item2] = temp;
 	}
-	//If it didnt find anything, set it to 0
-	ActiveItemIndex = 0;
+	//If there is no item2, just swap it with
+	if (ActionBar[item1Index] != nullptr && ActionBar[item2] == nullptr) {
+		ActionBar[item2] = ActionBar[item1Index];
+		ActionBar[item1Index] = nullptr;
+	}
 	return false;
 }
 
+bool UInventoryComponent::AddToActionBarRemoveFromBackpack(int backpackIndex, int actionBarIndex)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Add to action, remove from backpack"));
+	
+	AInventoryItem* temp;
+	temp = ActionBar[actionBarIndex];
+	ActionBar[actionBarIndex] = BackpackItems[backpackIndex];
+	BackpackItems[backpackIndex] = temp;
+	return false;
+}
+
+bool UInventoryComponent::RemoveFromActionBarAddToBackpack(int actionBarIndex, int backpackIndex)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Remove from action, add to backpack"));
+	AInventoryItem* temp;
+	temp = BackpackItems[backpackIndex];
+	BackpackItems[backpackIndex] = ActionBar[actionBarIndex];
+	ActionBar[actionBarIndex] = temp;
+	return false;
+}
+
+bool UInventoryComponent::SwapItemsInBackpack(int b1, int b2)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Swap items in backpack"));
+	AInventoryItem* temp;
+	temp = BackpackItems[b1];
+	BackpackItems[b1] = BackpackItems[b2];
+	BackpackItems[b2] = temp;
+	return true;
+}
+
+bool UInventoryComponent::PutItemInBackpack(AInventoryItem* item, int toIndex)
+{
+	int index;
+	for (int i = 0; i < BackpackItems.Num(); i++) {
+		if (BackpackItems[i] == item) {
+			index = i;
+		}
+	}
+	if (BackpackItems[toIndex] != nullptr) {
+		return SwapItemsInBackpack(index, toIndex);
+	}
+	return false;
+}
+#pragma endregion
+
 void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 {
-	//Disable previous active
-	if (playerItems[ActiveItemIndex]) {
-		playerItems[ActiveItemIndex]->DisableItem();
-	}
 	//Find new ActiveItemIndex
-	for (int i = 0; i < playerItems.Num(); i++) {
-		if (playerItems[i] == item) {
-			ActiveItemIndex = i;
+	for (int i = 0; i < ActionBar.Num(); i++) {
+		if (ActionBar[i] == item) {
+			ActionBarIndex = i;
 		}
 	}
 	//Activate it
-	playerItems[ActiveItemIndex]->SetActorEnableCollision(false);
-	playerItems[ActiveItemIndex]->ActivateItem();
-	playerItems[ActiveItemIndex]->DisablePhysics();
+	ActionBar[ActionBarIndex]->SetActorEnableCollision(false);
+	ActionBar[ActionBarIndex]->ActivateItem();
+	ActionBar[ActionBarIndex]->DisablePhysics();
 	//Enabled an item, so the player is no longer using hands
 	player->DisableHands();
 }
 
 FInventorySave UInventoryComponent::GetInventorySave() {
 	FInventorySave save;
-	for (int i = 0; i < playerItems.Num(); i++) {
-		if (playerItems[i]) {
-			save.IDs.Add(playerItems[i]->ItemID);
+	FInventoryItemSave item;
+	for (int i = 0; i < BackpackSize; i++) {
+		if (BackpackItems[i] != nullptr) {
+			item.ID = BackpackItems[i]->ItemID;
+			item.index = i;
+			save.BPItems.Add(item);
 		}
 	}
-	save.active = ActiveItemIndex;
+	for (int i = 0; i < ActionBar.Num(); i++) {
+		if (ActionBar[i] != nullptr) {
+			item.ID = ActionBar[i]->ItemID;
+			item.index = i;
+			save.QAItems.Add(item);
+		}
+	}
 	return save;
 }
