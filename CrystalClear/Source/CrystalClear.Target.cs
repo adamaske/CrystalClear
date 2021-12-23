@@ -10,5 +10,6 @@ public class CrystalClearTarget : TargetRules
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		ExtraModuleNames.AddRange( new string[] { "CrystalClear" } );
+		WindowsPlatform.PCHMemoryAllocationFactor = 2000;
 	}
 }

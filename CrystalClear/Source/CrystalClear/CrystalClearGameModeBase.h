@@ -20,10 +20,20 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
-
+#pragma region Controller
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class ACCPlayerController> PlayerController_BP;
+#pragma endregion
+#pragma region Player
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<APlayerUnit> PlayerBlueprint;
 
 	UPROPERTY(EditAnywhere, Category = "Player")
-	class APlayerUnit* PlayerUnit{ nullptr };
+	class APlayerUnit* Player{ nullptr };
+
+	void SpawnPlayer();
+#pragma endregion
+
+
 };
