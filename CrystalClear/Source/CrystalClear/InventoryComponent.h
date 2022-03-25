@@ -72,7 +72,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<AInventoryItem*> ActionBar;
 	int ActionBarSize = 5;
-	int ActionBarIndex = 2;
+	int ActionBarIndex = 0;
 
 	UFUNCTION(BlueprintCallable)
 	bool SwapItemsInActionBar(AInventoryItem* item1, int item2);

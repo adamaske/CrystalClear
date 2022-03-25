@@ -5,6 +5,8 @@
 #include "PlayerUnit.h"
 #include "InventoryItem.h"
 #include "CCPlayerController.h"
+#include "PlayerHandComponent.h"
+
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
 {
@@ -33,13 +35,6 @@ void UInventoryComponent::BeginPlay()
 void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %d"), ActiveItemIndex));
-	if (ActionBar[ActionBarIndex]) {
-		ActionBar[ActionBarIndex]->SetActorLocation(player->hand->GetComponentLocation());
-		ActionBar[ActionBarIndex]->SetActorRotation(player->hand->GetComponentRotation());
-	}
 }
 
 void UInventoryComponent::ActivateNextItem(int dir)
@@ -62,7 +57,6 @@ void UInventoryComponent::ActivateNextItem(int dir)
 	}
 	if (ActionBar[ActionBarIndex] != nullptr){
 		SetActiveItem(ActionBar[ActionBarIndex]);
-		player->DisableHands();
 	}
 	else {
 		//There is no items here, so the player is using hands
@@ -95,11 +89,9 @@ void UInventoryComponent::DropItem()
 	if (ActionBar[ActionBarIndex] != nullptr) {
 		AInventoryItem* item = ActionBar[ActionBarIndex];
 		if (item) {
+			//player->PlayerHand->DropItem();
 			ActionBar[ActionBarIndex] = nullptr;
-			item->ActivateItem();
-			item->EnablePhysics();
-			item->SetActorRotation(player->GetActorRotation());
-			item->SetActorLocation(player->GetActorLocation() + FVector(200, 0, 0));
+			
 		}
 	}
 }
@@ -188,6 +180,7 @@ void UInventoryComponent::AddItem(AInventoryItem* item)
 	}
 	return;
 }
+
 void UInventoryComponent::AddItem(AInventoryItem* item, bool activate)
 {
 	//Adds item
@@ -293,11 +286,10 @@ void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 			GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %i"), i));
 		}
 	}
-	//Activate it
-	ActionBar[ActionBarIndex]->SetActorEnableCollision(false);
-	ActionBar[ActionBarIndex]->ActivateItem();
-	ActionBar[ActionBarIndex]->DisablePhysics();
-	//Enabled an item, so the player is no longer using hands
+	//Give the player hand this item
+	//player->PlayerHand->GetItem(ActionBar[ActionBarIndex]);
+	
+	//Enable hands
 	player->DisableHands();
 }
 

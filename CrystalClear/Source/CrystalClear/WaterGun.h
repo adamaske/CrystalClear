@@ -3,17 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InventoryItem.h"
-#include "GunTest.generated.h"
+#include "GunBase.h"
+#include "WaterGun.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CRYSTALCLEAR_API AGunTest : public AInventoryItem
+class CRYSTALCLEAR_API AWaterGun : public AGunBase
 {
 	GENERATED_BODY()
+public:
 
 	virtual void Use1() override;
 	virtual void Use2() override;
+
 };

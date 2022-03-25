@@ -10,6 +10,7 @@
 #include "MoveableComponent.h"
 #include "CCSaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "PlayerHandComponent.h"
 // Sets default values
 APlayerUnit::APlayerUnit()
 {
@@ -36,11 +37,14 @@ APlayerUnit::APlayerUnit()
 	moveableHandler->player = this;
 
 	inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
-	hand = CreateDefaultSubobject<USceneComponent>(TEXT("Hand"));
-	hand->SetupAttachment(FPSCamera);
+	
+	PlayerHand = CreateDefaultSubobject<UPlayerHandComponent>(TEXT("Player Hand"));
+	//
+	mHand = CreateDefaultSubobject<USceneComponent>(TEXT("Hand"));
+	mHand->SetupAttachment(FPSCamera);
 
-	handsMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Hands"));
-	handsMesh->SetupAttachment(FPSCamera);
+	mHandsMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HandMesh"));
+	mHandsMesh->SetupAttachment(FPSCamera);
 }
 
 // Called when the game starts or when spawned
@@ -61,7 +65,11 @@ void APlayerUnit::BeginPlay()
 void APlayerUnit::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+	if (inventory->ActionBar[inventory->ActionBarIndex]) {
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, TEXT("Moved item"));
+		inventory->ActionBar[inventory->ActionBarIndex]->SetActorLocation(mHand->GetComponentLocation() + inventory->ActionBar[inventory->ActionBarIndex]->mPosistionOffset);
+		inventory->ActionBar[inventory->ActionBarIndex]->SetActorRotation(mHand->GetComponentRotation() + inventory->ActionBar[inventory->ActionBarIndex]->mRotationOffset);
+	}
 }
 
 // Called to bind functionality to input
@@ -183,7 +191,7 @@ void APlayerUnit::UseLeftClick()
 {
 	
 	if (bUsesHands) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Used 1 but uses hand"));
+		
 	}
 	else {
 		if(inventory->ActiveItem() != nullptr)
@@ -194,16 +202,18 @@ void APlayerUnit::UseLeftClick()
 void APlayerUnit::UseRightClick()
 {
 	if (bUsesHands) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Used 2 but uses hand"));
+		
 	}
 	else {
 		if (inventory->ActiveItem() != nullptr)
 			inventory->ActiveItem()->Use2();
 	}
 }
+
 void APlayerUnit::DropItem()
 {
 	inventory->DropItem();
+	EnableHands();
 }
 
 void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
@@ -214,18 +224,12 @@ void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
 void APlayerUnit::PutAwayItem()
 {
 	if (bUsesHands) {
-		//If there was an item to enable
-		if (inventory->EquipItem(true)) {
-			bUsesHands = false;
-			handsMesh->SetVisibility(false);
-		}
-		else {
-			//There was no items to equip
-			EnableHands();
-		}
+		DisableHands();
+		PlayerHand->ShowItem();
 	}
 	else {
 		//If there was an item to enable
+		PlayerHand->HideItem();
 		EnableHands();
 	}
 
@@ -234,24 +238,28 @@ void APlayerUnit::PutAwayItem()
 
 void APlayerUnit::NextItem(float dir)
 {
-	
 	inventory->ActivateNextItem(dir);
 }
 
 void APlayerUnit::EnableHands()
 {
+	if (inventory->ActionBar[inventory->ActionBarIndex]) {
+		inventory->ActionBar[inventory->ActionBarIndex]->DisableItem();
+	}
 	//Uses hands now
 	bUsesHands = true;
-	//Disables inventory
-	inventory->EquipItem(false);
 	//Enable hands mesh
-	handsMesh->SetVisibility(true, true);
+	PlayerHand->HideItem();
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan,TEXT("Enabled PlayerHands"));
 }
 
 void APlayerUnit::DisableHands()
 {
-	handsMesh->SetVisibility(false, true);
+	if (inventory->ActionBar[inventory->ActionBarIndex]) {
+		inventory->ActionBar[inventory->ActionBarIndex]->ActivateItem();
+	}
+	
+	PlayerHand->ShowItem();
 	bUsesHands = false;
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, TEXT("Disabled PlayerHands"));
 }

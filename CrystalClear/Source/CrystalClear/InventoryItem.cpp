@@ -25,7 +25,7 @@ void AInventoryItem::BeginPlay()
 void AInventoryItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 }
 
 void AInventoryItem::Used(PlayerUnit* player)

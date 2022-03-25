@@ -93,9 +93,6 @@ public:
 		class UInventoryComponent* inventory;
 	//
 	void PickupItem(class AInventoryItem* item, bool activate);
-	//Hand, where items are held
-	UPROPERTY(EditAnywhere)
-		class USceneComponent* hand;
 
 	//Put away items/Enable hands
 	void PutAwayItem();
@@ -104,6 +101,14 @@ public:
 	void NextItem(float dir);
 	
 	//Enable hands, switches modes for player and inventory
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		class UPlayerHandComponent* PlayerHand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand")
+		class USceneComponent* mHand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand")
+		class UStaticMeshComponent* mHandsMesh;
 	bool bUsesHands = false;
 	void EnableHands();
 	void DisableHands();
@@ -114,9 +119,6 @@ private:
 	void UseRightClick();
 	//Drop item
 	void DropItem();
-	//Hands
-	UPROPERTY(EditAnywhere)
-		class UStaticMeshComponent* handsMesh;
 
 #pragma endregion
 

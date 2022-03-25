@@ -44,9 +44,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 		FText ItemDescription;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	class UInventoryPickupComponent* pickupComponent;
-	class UPrimitiveComponent* root;
+		class UInventoryPickupComponent* pickupComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		class UPrimitiveComponent* root;
+
+	//Offsets
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		FVector mPosistionOffset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		FRotator mRotationOffset;
 	void DisableItem();
 	void ActivateItem();
 	void DisablePhysics();

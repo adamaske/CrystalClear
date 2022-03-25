@@ -13,7 +13,7 @@ class CRYSTALCLEAR_API UPlayerHandComponent : public UActorComponent
 	
 public:	
 	// Sets default values for this actor's properties
-	UPlayerHandComponent();
+	UPlayerHandComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
 	// Called when the game starts or when spawned
@@ -22,11 +22,22 @@ protected:
 public:	
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	UPROPERTY(EditAnywhere, Category = "Player Unit")
-	class USceneComponent* hand;
+
 	UPROPERTY(VisibleAnywhere)
 		class APlayerUnit* player;
-	class AActor* item;
-	void GetItem(AActor* ac);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand")
+		class USceneComponent* hand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Hand")
+		class UStaticMeshComponent* handsMesh;
+
+	class AInventoryItem* item;
+	void GetItem(class AInventoryItem* ac);
+	void EnableItem();
 	void DisableItem();
+
+	void HideItem();
+	void ShowItem();
+
+	void DropItem();
 };
