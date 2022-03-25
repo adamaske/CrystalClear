@@ -30,6 +30,9 @@ public:
 	int ItemID = 0;
 
 	UPROPERTY(EditAnywhere)
+		class APlayerUnit* mPlayer;
+
+	UPROPERTY(EditAnywhere)
 		class UStaticMeshComponent* mesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")

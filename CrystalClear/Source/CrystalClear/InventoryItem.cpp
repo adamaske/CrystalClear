@@ -3,6 +3,7 @@
 
 #include "InventoryItem.h"
 #include "InventoryPickupComponent.h"
+#include "PlayerUnit.h"
 // Sets default values
 AInventoryItem::AInventoryItem()
 {
@@ -19,6 +20,10 @@ AInventoryItem::AInventoryItem()
 void AInventoryItem::BeginPlay()
 {
 	Super::BeginPlay();
+	mPlayer = Cast<APlayerUnit>(GetWorld()->GetFirstPlayerController()->GetPawn());
+	if (!mPlayer) {
+		GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Cyan, TEXT("InventoryItem : No player"));
+	}
 }
 
 // Called every frame

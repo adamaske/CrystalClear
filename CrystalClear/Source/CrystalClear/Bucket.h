@@ -17,5 +17,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
 		class APlantBase* mPlant;
+
 	void GetSoil();
+	void GrowPlant();
 };

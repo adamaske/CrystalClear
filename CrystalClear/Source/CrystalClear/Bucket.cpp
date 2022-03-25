@@ -6,10 +6,20 @@
 void ABucket::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
+	if (mPlant) {
+
+	}
 	
 }
 
 
 void ABucket::GetSoil() {
 
+}
+
+void ABucket::GrowPlant()
+{
+	if (mPlant) {
+		mPlant->Grow(1);
+	}
 }

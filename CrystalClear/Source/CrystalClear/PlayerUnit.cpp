@@ -212,7 +212,10 @@ void APlayerUnit::UseRightClick()
 
 void APlayerUnit::DropItem()
 {
+	inventory->ActionBar[inventory->ActionBarIndex]->EnablePhysics();
+	inventory->ActionBar[inventory->ActionBarIndex]->ActivateItem();
 	inventory->DropItem();
+	
 	EnableHands();
 }
 
@@ -245,6 +248,7 @@ void APlayerUnit::EnableHands()
 {
 	if (inventory->ActionBar[inventory->ActionBarIndex]) {
 		inventory->ActionBar[inventory->ActionBarIndex]->DisableItem();
+		inventory->ActionBar[inventory->ActionBarIndex]->DisablePhysics();
 	}
 	//Uses hands now
 	bUsesHands = true;
@@ -257,6 +261,7 @@ void APlayerUnit::DisableHands()
 {
 	if (inventory->ActionBar[inventory->ActionBarIndex]) {
 		inventory->ActionBar[inventory->ActionBarIndex]->ActivateItem();
+
 	}
 	
 	PlayerHand->ShowItem();
