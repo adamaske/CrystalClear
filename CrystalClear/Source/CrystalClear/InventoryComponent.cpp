@@ -4,13 +4,21 @@
 #include "InventoryComponent.h"
 #include "PlayerUnit.h"
 #include "InventoryItem.h"
+#include "CCPlayerController.h"
 // Sets default values for this component's properties
 UInventoryComponent::UInventoryComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
+	BackpackItems.SetNum(BackpackSize);
+	for (int i = 0; i < BackpackSize; i++) {
+		BackpackItems[i] = nullptr;
+	}
+	ActionBar.SetNum(ActionBarSize);
+	for (int i = 0; i < ActionBarSize; i++) {
+		ActionBar[i] = nullptr;
+	}
 }
 
 
@@ -18,12 +26,7 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	for (int i = 0; i < BackpackSize; i++) {
-		BackpackItems.Add(nullptr);
-	}
-	for (int i = 0; i < ActionBarSize; i++) {
-		ActionBar.Add(nullptr);
-	}
+	
 }
 
 // Called every frame
@@ -49,7 +52,7 @@ void UInventoryComponent::ActivateNextItem(int dir)
 		ActionBar[ActionBarIndex]->DisableItem();
 	}
 	ActionBarIndex += dir;
-	if (ActionBarIndex >= ActionBar.Num()) {
+	if (ActionBarIndex >= ActionBarSize) {
 		//If it went over, set it to 0
 		ActionBarIndex = 0;
 	}
@@ -59,12 +62,15 @@ void UInventoryComponent::ActivateNextItem(int dir)
 	}
 	if (ActionBar[ActionBarIndex] != nullptr){
 		SetActiveItem(ActionBar[ActionBarIndex]);
+		player->DisableHands();
 	}
 	else {
 		//There is no items here, so the player is using hands
 		player->EnableHands();
 	}
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %d"), ActiveItemIndex));
+	UpdateActionBar();
+	
+	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %i"), ActiveItemIndex), true);
 }
 
 bool UInventoryComponent::EquipItem(bool equip)
@@ -75,6 +81,7 @@ bool UInventoryComponent::EquipItem(bool equip)
 
 AInventoryItem* UInventoryComponent::ActiveItem()
 {
+	
 	return ActionBar[ActionBarIndex];
 }
 
@@ -181,6 +188,22 @@ void UInventoryComponent::AddItem(AInventoryItem* item)
 	}
 	return;
 }
+void UInventoryComponent::AddItem(AInventoryItem* item, bool activate)
+{
+	//Adds item
+	for (int i = 0; i < BackpackItems.Num(); i++) {
+		if (BackpackItems[i] == nullptr) {
+			BackpackItems[i] = item;
+			BackpackItems[i]->DisableItem();
+			if (activate) {
+				AddToActionBarRemoveFromBackpack(i, ActiveItemIndex);
+			}
+			ACCPlayerController::GetInstance()->UpdateHUD();
+			return;
+		}
+	}
+	return;
+}
 
 #pragma region Blueprint functions
 bool UInventoryComponent::SwapItemsInActionBar(AInventoryItem* item1, int item2)
@@ -214,8 +237,7 @@ bool UInventoryComponent::SwapItemsInActionBar(AInventoryItem* item1, int item2)
 
 bool UInventoryComponent::AddToActionBarRemoveFromBackpack(int backpackIndex, int actionBarIndex)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Add to action, remove from backpack"));
-	
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Add to action, remove from backpack"));;
 	AInventoryItem* temp;
 	temp = ActionBar[actionBarIndex];
 	ActionBar[actionBarIndex] = BackpackItems[backpackIndex];
@@ -255,6 +277,7 @@ bool UInventoryComponent::PutItemInBackpack(AInventoryItem* item, int toIndex)
 		}
 	}
 	if (BackpackItems[toIndex] != nullptr) {
+		UpdateActionBar();
 		return SwapItemsInBackpack(index, toIndex);
 	}
 	return false;
@@ -267,6 +290,7 @@ void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 	for (int i = 0; i < ActionBar.Num(); i++) {
 		if (ActionBar[i] == item) {
 			ActionBarIndex = i;
+			GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Cyan, FString::Printf(TEXT("ActiveItemIndex : %i"), i));
 		}
 	}
 	//Activate it
@@ -279,19 +303,23 @@ void UInventoryComponent::SetActiveItem(AInventoryItem* item)
 
 void UInventoryComponent::UpdateActionBar() {
 	for (int i = 0; i < BackpackItems.Num(); i++) {
+		//Disable all items in the backpack
 		if (BackpackItems[i] != nullptr) {
 			BackpackItems[i]->DisableItem();
 		}
 	}
 	for (int i = 0; i < ActionBar.Num(); i++) {
 		if (i != ActionBarIndex) {
+			//Disable all items that are not the active tiem index
 			if (ActionBar[i] != nullptr) {
 				ActionBar[i]->DisableItem();
 			}
 		}
-		else {
+		else if(i == ActionBarIndex){
+			//If this is the actionbarindex, and the object here is valid, actiavte it and disable hands
 			if (ActionBar[ActionBarIndex] != nullptr) {
 				ActionBar[ActionBarIndex]->ActivateItem();
+				player->DisableHands();
 			}
 		}
 	}

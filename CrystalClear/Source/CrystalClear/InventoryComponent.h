@@ -49,6 +49,8 @@ public:
 
 	//Adds item, true = equip this item now
 	void AddItem(AInventoryItem* item);
+	//Adds item, true = equip this item now
+	void AddItem(AInventoryItem* item, bool activateNow);
 	//-1 down in the array, 1 = up, 
 	void ActivateNextItem(int dir);
 	//True = equipp, False = dequip
@@ -70,7 +72,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<AInventoryItem*> ActionBar;
 	int ActionBarSize = 5;
-	int ActionBarIndex = 0;
+	int ActionBarIndex = 2;
 
 	UFUNCTION(BlueprintCallable)
 	bool SwapItemsInActionBar(AInventoryItem* item1, int item2);

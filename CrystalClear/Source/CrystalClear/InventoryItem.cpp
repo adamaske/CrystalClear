@@ -63,8 +63,10 @@ void AInventoryItem::ActivateItem()
 
 void AInventoryItem::Use1()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("InventoryItem : Used 1"));
 }
 
 void AInventoryItem::Use2()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("InventoryItem : Used 2"));
 }

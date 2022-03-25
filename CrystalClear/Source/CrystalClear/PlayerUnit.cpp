@@ -181,8 +181,9 @@ void APlayerUnit::EndMovingItem()
 #pragma region Inventory and items
 void APlayerUnit::UseLeftClick()
 {
+	
 	if (bUsesHands) {
-
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Used 1 but uses hand"));
 	}
 	else {
 		if(inventory->ActiveItem() != nullptr)
@@ -193,7 +194,7 @@ void APlayerUnit::UseLeftClick()
 void APlayerUnit::UseRightClick()
 {
 	if (bUsesHands) {
-
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Used 2 but uses hand"));
 	}
 	else {
 		if (inventory->ActiveItem() != nullptr)
@@ -207,7 +208,7 @@ void APlayerUnit::DropItem()
 
 void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
 {
-	inventory->AddItem(item);
+	inventory->AddItem(item, activate);
 }
 
 void APlayerUnit::PutAwayItem()
@@ -228,11 +229,12 @@ void APlayerUnit::PutAwayItem()
 		EnableHands();
 	}
 
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Equipped items : % d"), !bUsesHands));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Equipped items : % d"), !bUsesHands));
 }
 
 void APlayerUnit::NextItem(float dir)
 {
+	
 	inventory->ActivateNextItem(dir);
 }
 
@@ -244,13 +246,14 @@ void APlayerUnit::EnableHands()
 	inventory->EquipItem(false);
 	//Enable hands mesh
 	handsMesh->SetVisibility(true, true);
-
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan,TEXT("Enabled PlayerHands"));
 }
 
 void APlayerUnit::DisableHands()
 {
 	handsMesh->SetVisibility(false, true);
 	bUsesHands = false;
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, TEXT("Disabled PlayerHands"));
 }
 
 #pragma endregion

@@ -7,7 +7,7 @@
 #include "CCPlayerController.generated.h"
 
 /**
- * 
+ *
  */
 
 UENUM()
@@ -21,6 +21,7 @@ class CRYSTALCLEAR_API ACCPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	
 
 	virtual void BeginPlay() override;
 
@@ -32,11 +33,14 @@ private:
 	virtual void SetupInputComponent() override;
 #pragma region Player
 public:
-		UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 		class APlayerUnit* PlayerUnit;
-		void PossessPlayer();
-		UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
-			void OpenInventory();
+	void PossessPlayer();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
+		void OpenInventory();
+	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory")
+		void UpdateHUD();
+	
 private:
 	void GetPlayer();
 	
@@ -46,4 +50,9 @@ private:
 public:
 	void PossessRV();
 #pragma endregion
+
+protected:
+	static ACCPlayerController* Instance;
+public:
+	static ACCPlayerController* GetInstance();
 };

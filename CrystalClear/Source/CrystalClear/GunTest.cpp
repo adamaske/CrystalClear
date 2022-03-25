@@ -5,12 +5,12 @@
 
 void AGunTest::Use1()
 {
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Shot weapon")));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("GunTest : Shot weapon")));
 }
 
 
 void AGunTest::Use2()
 {
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Cyan, FString::Printf(TEXT("Started aiming")));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("GunTest : Started aiming")));
 }
 

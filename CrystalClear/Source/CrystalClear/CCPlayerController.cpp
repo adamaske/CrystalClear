@@ -3,12 +3,17 @@
 
 #include "CCPlayerController.h"
 #include "PlayerUnit.h"
-
+ACCPlayerController* ACCPlayerController::Instance;
 void ACCPlayerController::BeginPlay() {
+	Instance = this;
 	GetPlayer();
 	SpawnHUD();
+	
 }
-
+ACCPlayerController* ACCPlayerController::GetInstance()
+{
+	return Instance;
+}
 void ACCPlayerController::SetupInputComponent() {
 	Super::SetupInputComponent();
 	InputComponent->BindAction("OpenInventory", IE_Pressed, this, &ACCPlayerController::OpenInventory);
@@ -36,6 +41,9 @@ void ACCPlayerController::PossessPlayer() {
 	Possess(PlayerUnit);
 }
 
-void ACCPlayerController::PossessRV(){
+void ACCPlayerController::PossessRV() {
 	//If !RV spawn rv
 }
+
+
+

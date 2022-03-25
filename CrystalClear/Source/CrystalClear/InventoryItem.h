@@ -43,7 +43,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 		FText ItemDescription;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 	class UInventoryPickupComponent* pickupComponent;
 	class UPrimitiveComponent* root;
 
