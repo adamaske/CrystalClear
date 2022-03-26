@@ -38,6 +38,6 @@ void UWaterableComponent::GetWater(float amount)
 		mMaxWaterLevel += amount;
 		mWaterLevel = FMath::Clamp(mWaterLevel, 0.f, mMaxWaterLevel);
 	}
-	
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Cyan, FString::Printf(TEXT("WaterableComponent : Got Water")), true);
 }
 

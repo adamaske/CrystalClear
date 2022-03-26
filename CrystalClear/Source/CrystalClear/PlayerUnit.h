@@ -119,13 +119,14 @@ private:
 	void UseRightClick();
 	//Drop item
 	void DropItem();
-
+	void DropItem(AInventoryItem* item);
 #pragma endregion
 
 #pragma region Interaction
 public:
 	UPROPERTY(EditAnywhere)
 		float InteractionDistance = 200;
+	FHitResult GetCameraHit();
 private:
 	//Interacting
 	UFUNCTION()

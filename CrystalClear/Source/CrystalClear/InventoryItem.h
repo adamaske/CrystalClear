@@ -6,6 +6,13 @@
 #include "GameFramework/Actor.h"
 #include "InventoryItem.generated.h"
 
+UENUM()
+enum ItemState {
+	InWorld UMETA(DisplayName = "InWorld"),
+	InInventory UMETA(DisplayName = "InInventory"),
+	InPlayerHand UMETA(DisplayName = "InPlayerHand"),
+	Other UMETA(DisplayName = "Other"),
+};
 
 UCLASS()
 class CRYSTALCLEAR_API AInventoryItem : public AActor
@@ -51,6 +58,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 		class UPrimitiveComponent* root;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
+		TEnumAsByte<ItemState> mItemState;
 
 	//Offsets
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
@@ -58,10 +67,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 		FRotator mRotationOffset;
-	void DisableItem();
-	void ActivateItem();
-	void DisablePhysics();
-	void EnablePhysics();
+
+	void SetItemState(ItemState state);
+	virtual void UpdateItemState();
+
+	virtual void PickedUp();
+
 	virtual void Use1();
 	virtual void Use2();
+
+	virtual void DropMe();
+	FHitResult GetPlayerCameraGenericHit();
 };

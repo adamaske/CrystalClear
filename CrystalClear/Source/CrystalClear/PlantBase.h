@@ -30,15 +30,29 @@ protected:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant", meta = (TitleProperty = "Plant"))
 		TArray<FPlantStage> mPlantStages;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant", meta = (TitleProperty = "Plant"))
 		class UStaticMeshComponent* mPlantMesh;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
 		int mPlantStageIndex = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
 		float mBaseGrowthRate = 0.1f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
 		TArray<class UStaticMesh*> mPlantStageMeshes;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
 		class UWaterableComponent* mWaterableComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
+		class ASoilBase* mSoil;
+
+	virtual void PickedUp() override;
+
 	void Grow(float rate);
+
+	void GetSoil(ASoilBase* soil);
+	virtual void Use1() override;
 };

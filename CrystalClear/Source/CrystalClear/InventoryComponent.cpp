@@ -44,7 +44,7 @@ void UInventoryComponent::ActivateNextItem(int dir)
 	}
 	//Deactivate old active item
 	if (ActionBar[ActionBarIndex] != nullptr) {
-		ActionBar[ActionBarIndex]->DisableItem();
+		ActionBar[ActionBarIndex]->SetItemState(ItemState::InInventory);
 	}
 	ActionBarIndex += dir;
 	if (ActionBarIndex >= ActionBarSize) {
@@ -102,10 +102,16 @@ void UInventoryComponent::DropItem(AInventoryItem* item)
 		if (BackpackItems[i] == item) {
 			AInventoryItem* item = BackpackItems[i];
 			BackpackItems[i] = nullptr;
-			item->ActivateItem();
-			item->EnablePhysics();
-			item->SetActorRotation(player->GetActorRotation());
-			item->SetActorLocation(player->GetActorLocation() + FVector(200, 0, 0));
+			item->SetItemState(ItemState::InWorld);
+			return;
+		}
+	}
+	//If its not in the backapck it is in the cation bar
+	for (int i = 0; i < ActionBar.Num(); i++) {
+		if (ActionBar[i] == item) {
+			AInventoryItem* item = ActionBar[i];
+			ActionBar[i] = nullptr;
+			item->SetItemState(ItemState::InWorld);
 			return;
 		}
 	}
@@ -142,7 +148,7 @@ void UInventoryComponent::AddItem(int id)
 	item = GetWorld()->SpawnActor<AInventoryItem>(allItems[index], GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation(), SpawnParams);
 
 	//This item should just be in inventory, so disable it
-	item->DisableItem();
+	item->SetItemState(ItemState::InInventory);
 	AddItem(item);
 }
 
@@ -164,7 +170,7 @@ void UInventoryComponent::AddItem(int id, int index)
 	item = GetWorld()->SpawnActor<AInventoryItem>(allItems[itemIndex], GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation(), SpawnParams);
 
 	//This item should just be in inventory, so disable it
-	item->DisableItem();
+	item->SetItemState(ItemState::InInventory);
 	BackpackItems[index] = item;
 }
 
@@ -174,7 +180,7 @@ void UInventoryComponent::AddItem(AInventoryItem* item)
 	for (int i = 0; i < BackpackItems.Num(); i++) {
 		if (BackpackItems[i] == nullptr) {
 			BackpackItems[i] = item;
-			BackpackItems[i]->DisableItem();
+			BackpackItems[i]->SetItemState(ItemState::InInventory);
 			return;
 		}
 	}
@@ -187,11 +193,12 @@ void UInventoryComponent::AddItem(AInventoryItem* item, bool activate)
 	for (int i = 0; i < BackpackItems.Num(); i++) {
 		if (BackpackItems[i] == nullptr) {
 			BackpackItems[i] = item;
-			BackpackItems[i]->DisableItem();
+			BackpackItems[i]->SetItemState(ItemState::InInventory);
 			if (activate) {
 				AddToActionBarRemoveFromBackpack(i, ActiveItemIndex);
 			}
 			ACCPlayerController::GetInstance()->UpdateHUD();
+			item->PickedUp();
 			return;
 		}
 	}
@@ -297,20 +304,20 @@ void UInventoryComponent::UpdateActionBar() {
 	for (int i = 0; i < BackpackItems.Num(); i++) {
 		//Disable all items in the backpack
 		if (BackpackItems[i] != nullptr) {
-			BackpackItems[i]->DisableItem();
+			BackpackItems[i]->SetItemState(ItemState::InInventory);
 		}
 	}
 	for (int i = 0; i < ActionBar.Num(); i++) {
 		if (i != ActionBarIndex) {
 			//Disable all items that are not the active tiem index
 			if (ActionBar[i] != nullptr) {
-				ActionBar[i]->DisableItem();
+				ActionBar[i]->SetItemState(ItemState::InInventory);
 			}
 		}
 		else if(i == ActionBarIndex){
 			//If this is the actionbarindex, and the object here is valid, actiavte it and disable hands
 			if (ActionBar[ActionBarIndex] != nullptr) {
-				ActionBar[ActionBarIndex]->ActivateItem();
+				ActionBar[ActionBarIndex]->SetItemState(ItemState::InPlayerHand);
 				player->DisableHands();
 			}
 		}

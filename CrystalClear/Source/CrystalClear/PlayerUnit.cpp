@@ -129,6 +129,25 @@ void APlayerUnit::StopJump()
 #pragma endregion
 
 #pragma region Interaction functions
+FHitResult APlayerUnit::GetCameraHit()
+{
+	// get the camera transform
+	FVector CameraLoc;
+	FRotator CameraRot;
+	GetActorEyesViewPoint(CameraLoc, CameraRot);
+
+	FVector Start = CameraLoc;
+	// you need to add a uproperty to the header file for a float PlayerInteractionDistance
+	FVector End = CameraLoc + (CameraRot.Vector() * MoveableDistance);
+
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParams;
+	TraceParams.AddIgnoredActor(this);
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility)) {
+		return HitResult;
+	}
+	return FHitResult();
+}
 void APlayerUnit::Interact() {
 	// get the camera transform
 	FVector CameraLoc = FPSCamera->GetComponentLocation();
@@ -171,7 +190,7 @@ void APlayerUnit::StartMovingItem()
 	FCollisionQueryParams TraceParams;
 	TraceParams.AddIgnoredActor(this);
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility)) {
-		if (HitResult.GetActor()->GetComponentByClass(UMoveableComponent::StaticClass())) {
+		if (HitResult.GetActor()->IsA(UMoveableComponent::StaticClass())) {
 
 			moveableHandler->StartMoving(Cast<UMoveableComponent>(HitResult.GetActor()->GetComponentByClass(UMoveableComponent::StaticClass())),
 				GrabLocation->GetComponentLocation() - HitResult.GetActor()->GetActorLocation());
@@ -212,11 +231,20 @@ void APlayerUnit::UseRightClick()
 
 void APlayerUnit::DropItem()
 {
-	inventory->ActionBar[inventory->ActionBarIndex]->EnablePhysics();
-	inventory->ActionBar[inventory->ActionBarIndex]->ActivateItem();
 	inventory->DropItem();
 	
 	EnableHands();
+}
+
+void APlayerUnit::DropItem(AInventoryItem* item)
+{
+	if (item == inventory->ActionBar[inventory->ActionBarIndex]) {
+		DropItem();
+		return;
+	}
+	inventory->DropItem(item);
+
+	//EnableHands();
 }
 
 void APlayerUnit::PickupItem(AInventoryItem* item, bool activate)
@@ -247,8 +275,7 @@ void APlayerUnit::NextItem(float dir)
 void APlayerUnit::EnableHands()
 {
 	if (inventory->ActionBar[inventory->ActionBarIndex]) {
-		inventory->ActionBar[inventory->ActionBarIndex]->DisableItem();
-		inventory->ActionBar[inventory->ActionBarIndex]->DisablePhysics();
+		inventory->ActionBar[inventory->ActionBarIndex]->SetItemState(ItemState::InInventory);
 	}
 	//Uses hands now
 	bUsesHands = true;
@@ -260,7 +287,7 @@ void APlayerUnit::EnableHands()
 void APlayerUnit::DisableHands()
 {
 	if (inventory->ActionBar[inventory->ActionBarIndex]) {
-		inventory->ActionBar[inventory->ActionBarIndex]->ActivateItem();
+		inventory->ActionBar[inventory->ActionBarIndex]->SetItemState(ItemState::InPlayerHand);
 
 	}
 	

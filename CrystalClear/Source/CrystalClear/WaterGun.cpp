@@ -6,6 +6,16 @@
 #include "PlayerUnit.h"
 void AWaterGun::Use1()
 {
+	FHitResult hit = GetPlayerCameraGenericHit();
+
+	if (hit.GetActor()) {
+		if (hit.GetActor()->GetComponentByClass(UWaterableComponent::StaticClass())) {
+			mCurrentWaterable = Cast<UWaterableComponent>(hit.GetActor()->GetComponentByClass(UWaterableComponent::StaticClass()));
+			mCurrentWaterable->GetWater(mWateringRate);
+		}
+	}
+
+	return;
 	CameraLoc = mPlayer->FPSCamera->GetComponentLocation();
 	CameraRot = mPlayer->FPSCamera->GetComponentRotation();
 

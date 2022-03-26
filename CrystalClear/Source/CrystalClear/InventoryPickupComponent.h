@@ -21,5 +21,5 @@ public:
 	void Dropped();
 	
 	UPROPERTY(EditAnywhere)
-		bool bActivateMeOnPickup = true;
+		bool bActivateMeOnPickup = false;
 };

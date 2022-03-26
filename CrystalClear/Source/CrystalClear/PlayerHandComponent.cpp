@@ -58,14 +58,14 @@ void UPlayerHandComponent::GetItem(AInventoryItem* ac)
 
 void UPlayerHandComponent::EnableItem() {
 	if(item){
-		item->ActivateItem();
+		//item->ActivateItem();
 	}
 }
 void UPlayerHandComponent::DisableItem()
 {
 	if (item) {
-		item->DisableItem();
-		item->DisablePhysics();
+		//item->DisableItem();
+		//item->DisablePhysics();
 	}
 	
 }
@@ -87,6 +87,6 @@ void UPlayerHandComponent::ShowItem()
 
 void UPlayerHandComponent::DropItem() {
 	EnableItem();
-	item->EnablePhysics();
+	//item->EnablePhysics();
 	item = nullptr;
 }
