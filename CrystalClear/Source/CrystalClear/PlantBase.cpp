@@ -42,20 +42,19 @@ void APlantBase::GetSoil(ASoilBase* soil) {
 }
 void APlantBase::Use1()
 {
-	//Find soil
+	//??
 	FHitResult hit = GetPlayerCameraGenericHit();
 	//Find if it hit a soil container
 	if (!hit.GetActor()) {
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Cyan, TEXT("PlantBase : No actor hit"));
+		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Cyan, TEXT("SoilBase : No actor hit"));
 		return;
 	}
 	if (hit.GetActor()->IsA(ASoilBase::StaticClass())) {
-		GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Cyan, TEXT("PlantBase : Hit SoilBase"));
-		return;
-		ASoilBase* s = Cast<ASoilBase>(hit.GetActor());
-		s->GetPlant(this);
-		//Drop me from player
+		ASoilBase* c = Cast<ASoilBase>(hit.GetActor());
+		//Drop me from inventory first
 		DropMe();
+		//Give me to the soil container
+		c->GetPlant(this);
+
 	}
-	//Drop me from player
 }

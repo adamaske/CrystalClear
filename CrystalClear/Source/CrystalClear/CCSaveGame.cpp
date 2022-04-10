@@ -5,6 +5,6 @@
 
 UCCSaveGame::UCCSaveGame() {
     SaveSlotName = TEXT("TestSaveSlot");
-    UserIndex = 0;
+    UserIndex = 5;
 }
 

@@ -16,11 +16,15 @@ class CRYSTALCLEAR_API ASoilContainer : public AInventoryItem
 public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
 		class APlantBase* mPlant;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Plant")
 		class ASoilBase* mSoil;
+
 	void GetSoil(ASoilBase* soil);
 	bool GetPlant(APlantBase* plant);
+
 	virtual void Use1() override;
 };

@@ -13,6 +13,7 @@ UCLASS()
 class CRYSTALCLEAR_API AWeaponBase : public AInventoryItem
 {
 	GENERATED_BODY()
+public:
 	virtual void Use1() override;
 	virtual void Use2() override;
 };
