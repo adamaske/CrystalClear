@@ -102,5 +102,17 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		UInputAction* m_JumpAction;
 
+	/** Interact Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		UInputAction* m_InteractAction;
+
+public:
+
+	void RequestInteraction();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		float m_InteractionRange = 300.f;
+	UFUNCTION(BlueprintCallable)
+		AActor* GetActorInFronOfCamera();
 
 };

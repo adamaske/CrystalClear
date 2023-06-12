@@ -24,6 +24,7 @@ class ACC_HUD;
 //Pausing delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPaused);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnpaused);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExitGame);
 
 UCLASS()
 class CRYSTALCLEAR_API ACC_PlayerController : public APlayerController
@@ -38,13 +39,18 @@ public:
 
 	virtual void SetupInputComponent() override;
 
-	void Pause();
+	UFUNCTION(BlueprintCallable)
+	void ChangePause();
 
 	UPROPERTY(BlueprintAssignable, Category = "Game Control")
 		FOnPaused m_OnPaused;
 	UPROPERTY(BlueprintAssignable, Category = "Game Control")
 		FOnUnpaused m_OnUnpaused;
 
+	UFUNCTION(BlueprintCallable)
+		void ExitGame();
+	UPROPERTY(BlueprintAssignable, Category = "Game Control")
+		FOnExitGame m_OnGameExit;
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess = "true"))
 		ACC_Character* m_Player; 

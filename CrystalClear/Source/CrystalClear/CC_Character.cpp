@@ -8,6 +8,9 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
+//Interface
+#include "CC_Interactable.h"
+
 //Input
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -79,6 +82,8 @@ void ACC_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 		//Change between third and first person 
 		EnhancedInputComponent->BindAction(m_ChangePerspectiveAction, ETriggerEvent::Triggered, this, &ACC_Character::ChangePerspective);
+		//Change between third and first person 
+		EnhancedInputComponent->BindAction(m_InteractAction, ETriggerEvent::Triggered, this, &ACC_Character::RequestInteraction);
 
 	}
 }
@@ -124,4 +129,39 @@ void ACC_Character::HandlePerspective(TEnumAsByte<EPlayerPerspective> perspectiv
 	m_Camera->bUsePawnControlRotation = m_Perspective == FirstPerson;
 
 	m_OnPerspectiveChanged.Broadcast(perspective);
+}
+
+void ACC_Character::RequestInteraction()
+{
+	auto actor = GetActorInFronOfCamera();
+	if (!IsValid(actor)) {
+		return;
+	}
+
+	auto interact = Cast<ICC_Interactable>(actor);
+	if (!interact) {
+		return;
+	}
+
+	interact->Execute_Interact(actor, this);
+	
+}
+
+AActor* ACC_Character::GetActorInFronOfCamera()
+{
+	float ExtraLength = m_Perspective == ThirdPerson ? m_CameraSpringArm->TargetArmLength : 0.f;
+	auto start = m_Camera->GetComponentLocation();
+	auto end = start + (m_Camera->GetForwardVector() * (m_InteractionRange + ExtraLength));
+
+	FHitResult Hit;
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(Hit, start, end, ECC_Visibility, params);
+
+	if (!Hit.bBlockingHit && !IsValid(Hit.GetActor())) {
+		return nullptr;
+	}
+
+	auto actor = Hit.GetActor();
+	return actor;
 }

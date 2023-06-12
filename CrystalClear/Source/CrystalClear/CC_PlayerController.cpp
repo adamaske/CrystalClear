@@ -49,14 +49,19 @@ void ACC_PlayerController::SetupInputComponent()
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
 		//Jumping
-		EnhancedInputComponent->BindAction(m_PauseAction, ETriggerEvent::Triggered, this, &ACC_PlayerController::Pause);
+		EnhancedInputComponent->BindAction(m_PauseAction, ETriggerEvent::Triggered, this, &ACC_PlayerController::ChangePause);
 		
 	}
 }
 
-void ACC_PlayerController::Pause()
+void ACC_PlayerController::ChangePause()
 {
 	b_Paused = !b_Paused;
 
 	b_Paused ? m_OnPaused.Broadcast() : m_OnUnpaused.Broadcast();
+}
+
+void ACC_PlayerController::ExitGame()
+{
+	m_OnGameExit.Broadcast();
 }
