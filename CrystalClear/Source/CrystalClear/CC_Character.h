@@ -24,6 +24,9 @@ UENUM(BlueprintType)
 enum EPlayerPerspective { FirstPerson, ThirdPerson };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPerspectiveChanged, TEnumAsByte<EPlayerPerspective>, _ToPerspective);
 
+UENUM(BlueprintType)
+enum EThirdPersonPerspectiveSide { Right, Left };
+
 
 UCLASS()
 class CRYSTALCLEAR_API ACC_Character : public ACharacter
@@ -64,31 +67,66 @@ public:
 		FOnPerspectiveChanged m_OnPerspectiveChanged;
 	UFUNCTION(BlueprintCallable)
 		void HandlePerspective(TEnumAsByte<EPlayerPerspective> perspective);
+
+	//Change the location of the camera boom based on control rotation
+	void HandleCameraBoomLocation();
+	//Set the rotatio of the camera boom based on its location
+	void HandleCameraBoomRotation();
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
 		TEnumAsByte<EPlayerPerspective> m_Perspective = FirstPerson;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		TEnumAsByte<EThirdPersonPerspectiveSide> m_PerspectiveSide = Right;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		UInputAction* m_ChangePerspectiveAction;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_ThirdPersonCameraRadius = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_ThirdPersonCameraZOffset = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_ArmLengthToRadiusRatio = 0.5;
 
+	float m_Theta = 0.f;
 #pragma endregion
+
+
 private:
 	//COMPONENTS
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		float m_MovementSpeed = 100.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		float m_LookSensitivty = 10.f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		FVector m_CameraOffset = FVector{ -10, 0, 60 };//Ppsition Camera relative to capsule
-
+#pragma region Camera
+private:
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		UCameraComponent* m_Camera;
 	/** Spring Arm */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-		USpringArmComponent* m_CameraSpringArm;
+		USpringArmComponent* m_CameraBoom;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_CameraBoomTargetArmLength = 500;
+	//Sensitivies
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		float m_FirstPersonLookSensitivty = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		float m_ThirdPersonLookYawSensitivty = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		float m_ThirdPersonLookPitchSensitivty = 10.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		FVector m_CameraOffset = FVector{ -10, 0, 60 };//Ppsition Camera relative to capsule
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		float m_ZoomSpeed = 10.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		UInputAction* m_ZoomAction;
+
+	void Zoom(const FInputActionValue& Value);
+#pragma endregion
+
+#pragma region Input
+private:
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		UInputMappingContext* m_DefaultMappingContext;
@@ -101,18 +139,48 @@ private:
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		UInputAction* m_JumpAction;
-
 	/** Interact Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		UInputAction* m_InteractAction;
+	/** Shooting / UseHeld Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		UInputAction* m_ShootAction;
+	/** Aiming Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		UInputAction* m_AimAction;
+#pragma endregion
 
+#pragma region Interaction
 public:
-
 	void RequestInteraction();
-
+private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		float m_InteractionRange = 300.f;
+#pragma endregion
+
+#pragma region Combat
+public:
+	void Shoot();
+	void StartAim();
+	void EndAim();
+	bool b_Aiming = false;
+private:
+	/** First person camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		USceneComponent* m_TemporaryArm;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		float m_TemporaryArmMinYaw = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		float m_TemporaryArmMaxYaw = 90.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		float m_AimRotationRate = 10.f;
+#pragma endregion
+
+#pragma region Helpers
+
 	UFUNCTION(BlueprintCallable)
 		AActor* GetActorInFronOfCamera();
+
+#pragma endregion
 
 };
