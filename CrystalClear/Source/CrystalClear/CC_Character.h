@@ -20,12 +20,16 @@ class USpringArmComponent;
 class UAnimMontage;
 class USoundBase;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAim, bool, _IsAiming);
+
 UENUM(BlueprintType)
 enum EPlayerPerspective { FirstPerson, ThirdPerson };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPerspectiveChanged, TEnumAsByte<EPlayerPerspective>, _ToPerspective);
 
 UENUM(BlueprintType)
 enum EThirdPersonPerspectiveSide { Right, Left };
+
+
 
 
 UCLASS()
@@ -161,10 +165,18 @@ private:
 #pragma region Combat
 public:
 	void Shoot();
+
 	void StartAim();
+	void Aim();
 	void EndAim();
 	bool b_Aiming = false;
+
+	UPROPERTY(BlueprintAssignable, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		FOnAim m_OnAim;
+
 private:
+
+	
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* m_TemporaryArm;

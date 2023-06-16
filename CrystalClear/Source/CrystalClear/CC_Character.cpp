@@ -70,7 +70,13 @@ void ACC_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	
+
+	if (m_Perspective == ThirdPerson) {
+		HandleCameraBoomLocation();
+		HandleCameraBoomRotation();
+
+	}
+
 }
 
 // Called to bind functionality to input
@@ -99,7 +105,8 @@ void ACC_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		//Shooting
 		EnhancedInputComponent->BindAction(m_ShootAction, ETriggerEvent::Triggered, this, &ACC_Character::Shoot);
 		//Aiming
-		EnhancedInputComponent->BindAction(m_AimAction, ETriggerEvent::Triggered, this, &ACC_Character::StartAim);
+		EnhancedInputComponent->BindAction(m_AimAction, ETriggerEvent::Started, this, &ACC_Character::StartAim);
+		EnhancedInputComponent->BindAction(m_AimAction, ETriggerEvent::Triggered, this, &ACC_Character::Aim);
 		EnhancedInputComponent->BindAction(m_AimAction, ETriggerEvent::Completed, this, &ACC_Character::EndAim);
 	}
 }
@@ -108,9 +115,8 @@ void ACC_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void ACC_Character::Move(const FInputActionValue& Value)
 {
-	HandleCameraBoomLocation();
-	HandleCameraBoomRotation();
 
+	
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	MovementVector *= m_MovementSpeed * GetWorld()->GetDeltaSeconds();
@@ -130,6 +136,12 @@ void ACC_Character::Move(const FInputActionValue& Value)
 		AddMovementInput(Right, MovementVector.X);
 
 		
+	}
+
+	if (m_Perspective == ThirdPerson) {
+		HandleCameraBoomLocation();
+		HandleCameraBoomRotation();
+
 	}
 }
 
@@ -155,6 +167,8 @@ void ACC_Character::Look(const FInputActionValue& Value)
 			HandleCameraBoomLocation();
 			HandleCameraBoomRotation();
 	
+			
+			
 			//GEngine->AddOnScreenDebugMessage(2, 5, FColor::Cyan, FString::Printf(TEXT("Sign : %d"), sign));
 			//GEngine->AddOnScreenDebugMessage(3, 5, FColor::Cyan, FString::Printf(TEXT("Theta : %f"), theta));
 			//GEngine->AddOnScreenDebugMessage(4, 5, FColor::Cyan, FString::Printf(TEXT("Degrees : %f"), degrees));
@@ -179,9 +193,9 @@ void ACC_Character::HandlePerspective(TEnumAsByte<EPlayerPerspective> perspectiv
 	//Orient in Third Person
 	Movement->bOrientRotationToMovement = m_Perspective == ThirdPerson;
 	//Movement->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-
+	//
 	//Movement->JumpZVelocity = 700.f;
-	Movement->AirControl = 0.35f;// add yaw and pitch input to controller
+	//Movement->AirControl = 0.35f;// add yaw and pitch input to controller
 	//Movement->MaxWalkSpeed = 500.f;
 	//Movement->MinAnalogWalkSpeed = 20.f;
 	//Movement->BrakingDecelerationWalking = 2000.f;
@@ -201,9 +215,13 @@ void ACC_Character::HandlePerspective(TEnumAsByte<EPlayerPerspective> perspectiv
 	bUseControllerRotationRoll = false;
 
 	m_Theta = -PI;
-	HandleCameraBoomLocation();
-	HandleCameraBoomRotation();
 
+	if (m_Perspective == ThirdPerson) {
+		HandleCameraBoomLocation();
+		HandleCameraBoomRotation();
+
+	}
+	
 
 	m_OnPerspectiveChanged.Broadcast(perspective);
 }
@@ -266,18 +284,21 @@ void ACC_Character::Zoom(const FInputActionValue& Value) {
 		return;
 	}
 	//
-	float direction = Value.Get<float>();
 
-	//TODO
+	if (m_Perspective == ThirdPerson) {
+		float direction = Value.Get<float>();
 
-	//what happens when we zoom ? 
+		//TODO
 
-	m_CameraBoomTargetArmLength += m_ZoomSpeed * direction * GetWorld()->GetDeltaSeconds();
+		//what happens when we zoom ? 
 
-	HandleCameraBoomLocation();
-	HandleCameraBoomRotation();
+		m_CameraBoomTargetArmLength += m_ZoomSpeed * direction * GetWorld()->GetDeltaSeconds();
 
+		HandleCameraBoomLocation();
+		HandleCameraBoomRotation();
 
+	}
+	
 }
 
 void ACC_Character::RequestInteraction()
@@ -304,8 +325,13 @@ void ACC_Character::Shoot()
 void ACC_Character::StartAim()
 {
 	//TODO can we aim now ? 
-	b_Aiming = true;
 
+	b_Aiming = true;
+	m_OnAim.Broadcast(b_Aiming);
+}
+
+void ACC_Character::Aim()
+{
 	float deltaTime = GetWorld()->GetDeltaSeconds();
 	float rotationRate = m_AimRotationRate * deltaTime;
 
@@ -354,11 +380,13 @@ void ACC_Character::StartAim()
 		deltaDegrees += 360;//Turn it to positive
 	}
 
-	auto min = m_TemporaryArmMinYaw;
-	auto max = m_TemporaryArmMaxYaw;
-	if (desiredDegrees > max || desiredDegrees < min) {
-		// Todo : Find reminder
-	}
+	//TODO : Do we need to rotate the body ? 
+	
+	auto minArmRotation = m_TemporaryArmMinYaw;
+	auto maxArmRotation = m_TemporaryArmMaxYaw;
+	//TODO : Is the desired degrees above out side this range ? 
+	//Then rotate body to compensate
+
 	//TODO : MAKE IT SMOOTHER - NEEDS PID CONTROLLER LIKE BEHAVIOUR
 	if (thetaDegrees < 10 && thetaDegrees > -10) {
 		//Sets to desired
@@ -368,15 +396,22 @@ void ACC_Character::StartAim()
 		//Increment rotation towards desired
 		rotation.Yaw += sign ? rotationRate : -rotationRate;
 	}
-	
+
 	m_TemporaryArm->SetWorldRotation(rotation);
 
 	if (m_Perspective == ThirdPerson) {
 		HandleCameraBoomLocation();
 		HandleCameraBoomRotation();
 
+		//If we're aiming, set control rotation to camera 
+		//if (b_Aiming) {
+		//	rotation = GetActorRotation();
+		//	rotation.Yaw = m_Camera->GetComponentRotation().Yaw;
+		//	SetActorRotation(rotation);
+		//}
+
 	}
-	
+
 	GEngine->AddOnScreenDebugMessage(100, 5, FColor::Cyan, FString::Printf(TEXT("Aim : %s"), *Hit.GetActor()->GetName()));
 	GEngine->AddOnScreenDebugMessage(101, 5, FColor::Cyan, FString::Printf(TEXT("Theta Degrees: %f"), thetaDegrees));
 	GEngine->AddOnScreenDebugMessage(102, 5, FColor::Cyan, FString::Printf(TEXT("Theta Desired: %f"), desiredDegrees));
@@ -388,7 +423,9 @@ void ACC_Character::StartAim()
 void ACC_Character::EndAim()
 {
 	//TODO can we disable aiming ? 
+
 	b_Aiming = false;
+	m_OnAim.Broadcast(b_Aiming);
 }
 
 AActor* ACC_Character::GetActorInFronOfCamera()
