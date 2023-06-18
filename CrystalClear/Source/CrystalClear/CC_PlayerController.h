@@ -19,7 +19,7 @@ class UInputAction;
 
 class ACC_Character;
 class ACC_HUD;
-
+class ACC_CameraManager;
 
 //Pausing delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPaused);
@@ -56,7 +56,9 @@ private:
 		ACC_Character* m_Player; 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess = "true"))
 		ACC_HUD* m_HUD;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Player, meta = (AllowPrivateAccess = "true"))
+		ACC_CameraManager* m_CameraManagerBP;
+	
 	/** MappingContext for Game Control, i.e Pausing, Saving, etc*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		UInputMappingContext* m_ControlMappingContext;

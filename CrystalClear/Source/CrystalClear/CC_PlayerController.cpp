@@ -5,6 +5,8 @@
 #include "CC_Character.h"
 #include "CC_HUD.h"
 
+#include "CC_CameraManager.h"
+
 /** Input */
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -17,13 +19,14 @@ void ACC_PlayerController::OnPossess(APawn* InPawn) {
 		m_Player = character;
 	}
 
-
-
 }
 
 void ACC_PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	//Get camera manager
+
 
 	//Get HUD
 	//if (ACC_HUD* hud = CastChecked<ACC_HUD>(GetHUD())) {
