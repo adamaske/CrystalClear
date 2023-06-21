@@ -6,12 +6,18 @@
 #include "UObject/Interface.h"
 #include "CC_Interactable.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteracted, AActor*, _OtherActor);
+
+
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
 class UCC_Interactable : public UInterface
 {
 	GENERATED_BODY()
 };
+
 
 /**
  * 
@@ -27,4 +33,6 @@ public:
 	void Interact(AActor* OtherActor);
 	virtual void Interact_Implementation(AActor* OtherActor);
 
+	UFUNCTION()
+	virtual	FOnInteracted& GetOnInteractionDelegate() = 0;
 };

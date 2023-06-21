@@ -22,6 +22,7 @@ class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAim, bool, _IsAiming);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShoot);
 UENUM(BlueprintType)
 enum EPlayerPerspective { FirstPerson, ThirdPerson };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPerspectiveChanged, TEnumAsByte<EPlayerPerspective>, _ToPerspective);
@@ -59,6 +60,12 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_RotateTowardsCameraForwardSpeed = 100.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_RotateTowardsMovementDirectionSpeed = 180.f;
 public:
 
 #pragma region Perspective
@@ -76,6 +83,15 @@ public:
 	void HandleCameraBoomLocation();
 	//Set the rotatio of the camera boom based on its location
 	void HandleCameraBoomRotation();
+	//Set the  CameraBoom yaw theta based on the First Person rotation
+	void SetYawThetaToCurrentRotation();
+	
+	//This should be called during 
+	void RotateTowardMovement();
+
+	void RotateTowardCameraForward();
+
+
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
 		TEnumAsByte<EPlayerPerspective> m_Perspective = FirstPerson;
@@ -90,8 +106,11 @@ private:
 		float m_ThirdPersonCameraZOffset = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
 		float m_ArmLengthToRadiusRatio = 0.5;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_CameraBoomYawTheta = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+		float m_CameraBoomPitchTheta = 0;
 
-	float m_Theta = 0.f;
 #pragma endregion
 
 
@@ -171,21 +190,38 @@ public:
 	void EndAim();
 	bool b_Aiming = false;
 
-	UPROPERTY(BlueprintAssignable, Category = Perspective, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintAssignable, Category = Combat, meta = (AllowPrivateAccess = "true"))
 		FOnAim m_OnAim;
 
+	UPROPERTY(BlueprintAssignable, Category = Combat, meta = (AllowPrivateAccess = "true"))
+		FOnShoot m_OnShoot;
 private:
 
 	
-	/** First person camera */
+	/** Temporary arm for aiming */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* m_TemporaryArm;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		float m_TemporaryArmMinYaw = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-		float m_TemporaryArmMaxYaw = 90.f;
+		float m_TemporaryArmMaxYaw = 90.f; 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		float m_TemporaryArmMinPitch = 0.f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+		float m_TemporaryArmMaxPitch = 90.f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		float m_AimRotationRate = 10.f;
+
+	void TemporaryArmToIdle();
+	
+	void TemporaryArmToAimLocation(FVector location);
+	float m_TemporaryArmIdleRotationRate = 10.f;
+	float m_TemporaryArmIdleYaw = 0;
+	float m_TemporaryArmIdlePitch = 0;
+
 #pragma endregion
 
 #pragma region Helpers

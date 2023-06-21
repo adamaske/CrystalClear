@@ -27,4 +27,12 @@ void ADoor::Tick(float DeltaTime)
 
 void ADoor::Interact_Implementation(AActor* OtherActor) {
 	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Cyan, FString::Printf(TEXT("Open Door CPP")));
+
+	m_OnInteract.Broadcast(OtherActor);
+}
+
+FOnInteracted& ADoor::GetOnInteractionDelegate()
+{
+	// TODO: insert return statement here
+	return m_OnInteract;
 }

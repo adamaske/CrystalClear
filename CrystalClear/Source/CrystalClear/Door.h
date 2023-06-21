@@ -25,4 +25,9 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void Interact_Implementation(AActor* OtherActor) override;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnInteracted m_OnInteract;
+
+	virtual	FOnInteracted& GetOnInteractionDelegate() override;
 };
