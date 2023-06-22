@@ -48,6 +48,8 @@ ACC_Character::ACC_Character()
 	m_TemporaryArm = CreateDefaultSubobject<USceneComponent>(TEXT("Temporary Arm"));
 	m_TemporaryArm->SetupAttachment(GetRootComponent());
 
+	m_DesiredPistolLocation = CreateDefaultSubobject<USceneComponent>(TEXT("Desired Pistol Location"));
+	m_DesiredPistolLocation->SetupAttachment(GetRootComponent());
 }
 
 // Called when the game starts or when spawned
@@ -78,7 +80,7 @@ void ACC_Character::Tick(float DeltaTime)
 	}
 	if (m_Perspective == ThirdPerson) {
 		if (b_Aiming) {
-			RotateTowardCameraForward();//TODO Implement
+			//RotateTowardCameraForward();//TODO Implement
 			
 		}
 		else {
@@ -429,15 +431,72 @@ void ACC_Character::Aim()
 	params.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(Hit, start, end, ECC_Visibility, params);
 
+	FVector AimLocation(0, 0, 0);
 	//TODO : If we hit something ? 
 	if (Hit.bBlockingHit && IsValid(Hit.GetActor())) {
 		
-		TemporaryArmToAimLocation(Hit.Location);
+		AimLocation = Hit.Location;
 	}
 	else {
-		TemporaryArmToAimLocation(end);
+		AimLocation = end;
 	}
+
+	TemporaryArmToAimLocation(AimLocation);
+
+	//TODO : Calulate how the IK point should move to aim at this
+
+	//TODO : Max values
+	auto Rotaton = GetActorRotation();
+
+	FVector Forward = GetActorForwardVector();
+	FVector Right = GetActorRightVector();
+	FVector Up = GetActorUpVector();
+
+	auto target = AimLocation;
+	auto base = GetActorLocation();
+
+	//Direction towards AimLocation
+	FVector AimDirection = target - base;
+	AimDirection.Normalize();
+
+
+	//THETA
+	float Theta = FMath::Acos(FVector::DotProduct(Up, AimDirection) / (Up.Length(), AimDirection.Length()));
+	float ThetaDegrees = FMath::RadiansToDegrees(Theta); 
+
+	//Below : Above
+	bool ThetaSign = FVector::DotProduct(-Up, AimDirection) >= 0 ? true : false;//
+
+	//PHI
+	AimDirection.Z = 0;
+	float Phi = FMath::Acos(FVector::DotProduct(Forward, AimDirection) / (Forward.Length() * AimDirection.Length()));
+	float PhiDegrees = FMath::RadiansToDegrees(Phi);
+
+	//Left : Right
+	bool PhiSign = FVector::DotProduct(Right, AimDirection) >= 0 ? true : false;
 	
+	float s = FMath::DegreesToRadians(PhiSign ? PhiDegrees : -PhiDegrees);
+	float t = FMath::DegreesToRadians(ThetaSign ? ThetaDegrees : ThetaDegrees);
+
+
+	GEngine->AddOnScreenDebugMessage(230, 5, FColor::Cyan, FString::Printf(TEXT("Theta Degrees : %f"), ThetaDegrees));
+	GEngine->AddOnScreenDebugMessage(231, 5, FColor::Cyan, FString::Printf(TEXT("Theta Sign : %d"), ThetaSign));
+
+	GEngine->AddOnScreenDebugMessage(232, 5, FColor::Cyan, FString::Printf(TEXT("Phi Degrees : %f"), PhiDegrees));
+	GEngine->AddOnScreenDebugMessage(233, 5, FColor::Cyan, FString::Printf(TEXT("Phi Sign : %d"), PhiSign));
+
+	//How far out is the character holding the gun ? 
+	float DesiredArmLength = 100.f;
+
+	//TODO : Point straigth towards it 
+	float X = cos(s) * sin(t) * DesiredArmLength;
+	float Y = sin(s) * sin(t) * DesiredArmLength;
+	float Z = cos(t) * DesiredArmLength;
+
+	FVector NewArmLocation = FVector(X, Y, Z);
+	m_DesiredPistolLocation->SetRelativeLocation(NewArmLocation);
+
+	//TODO : Aim the point at the target
 }
 
 void ACC_Character::EndAim()

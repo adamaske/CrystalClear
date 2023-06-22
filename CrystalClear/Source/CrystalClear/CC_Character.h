@@ -20,17 +20,19 @@ class USpringArmComponent;
 class UAnimMontage;
 class USoundBase;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAim, bool, _IsAiming);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShoot);
 UENUM(BlueprintType)
 enum EPlayerPerspective { FirstPerson, ThirdPerson };
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPerspectiveChanged, TEnumAsByte<EPlayerPerspective>, _ToPerspective);
-
 UENUM(BlueprintType)
 enum EThirdPersonPerspectiveSide { Right, Left };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPerspectiveChanged, TEnumAsByte<EPlayerPerspective>, _ToPerspective);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnThirdPersonPerspectiveSideChanged, TEnumAsByte<EThirdPersonPerspectiveSide>, _ToSide);
 
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShoot);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAim, bool, _IsAiming);
 
 
 UCLASS()
@@ -196,8 +198,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Combat, meta = (AllowPrivateAccess = "true"))
 		FOnShoot m_OnShoot;
 private:
-
-	
+	/** Desrired Pistol Location */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		USceneComponent* m_DesiredPistolLocation;
 	/** Temporary arm for aiming */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* m_TemporaryArm;
