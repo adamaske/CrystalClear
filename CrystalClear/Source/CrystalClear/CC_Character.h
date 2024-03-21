@@ -82,12 +82,19 @@ public:
 		void HandlePerspective(TEnumAsByte<EPlayerPerspective> perspective);
 
 	//Change the location of the camera boom based on control rotation
+	FVector GetCameraBoomLocalLocation();
+	FVector GetCameraBoomLocalLocation(float _theta);
+	//Change the location of the camera boom based on control rotation
 	void HandleCameraBoomLocation();
+
+
 	//Set the rotatio of the camera boom based on its location
+	FRotator GetCameraBoomRotation();
 	void HandleCameraBoomRotation();
 	//Set the  CameraBoom yaw theta based on the First Person rotation
 	void SetYawThetaToCurrentRotation();
-	
+	float GetYawRotation();
+
 	//This should be called during 
 	void RotateTowardMovement();
 
@@ -129,6 +136,9 @@ private:
 	/** Spring Arm */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		USpringArmComponent* m_CameraBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		FVector m_CameraBoomOffset = FVector{ 0, 0, 50 };//
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Perspective, meta = (AllowPrivateAccess = "true"))
 		float m_CameraBoomTargetArmLength = 500;
 	//Sensitivies
